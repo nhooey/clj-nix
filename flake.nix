@@ -183,7 +183,7 @@
         pkgs // {
           inherit (pkgs) clj-builder deps-lock mk-deps-cache
             fake-git
-            mkCljBin mkCljLib mkGraalBin customJdk
+            mkCljBin mkCljLib mkCljsApp mkGraalBin customJdk
             cljHooks
             mkBabashka bbTasksFromFile;
 
@@ -328,6 +328,7 @@
           mk-deps-cache = final.callPackage ./pkgs/mkDepsCache.nix;
           mkCljBin = final.callPackage ./pkgs/mkCljBin.nix { inherit common; };
           mkCljLib = final.callPackage ./pkgs/mkCljLib.nix { };
+          mkCljsApp = final.callPackage ./pkgs/mkCljsApp.nix { };
           mkGraalBin = final.callPackage ./pkgs/mkGraalBin.nix { };
           customJdk = final.callPackage ./pkgs/customJdk.nix { };
 
