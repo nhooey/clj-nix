@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added ClojureScript support via `mkCljsApp`, compiling to JavaScript for
+  Node.js and browser targets using shadow-cljs
+
 ## 0.4.0 (2024-11-20)
 
 - Add `--lein-profiles` to the deps-lock CLI by #145 @JohnnyJayJay in #145
