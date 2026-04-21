@@ -1,0 +1,8 @@
+;; Fixture project to force deps-lock to cache the transitive JARs that
+;; ClojureScript integration tests need when resolving deps in isolation.
+;; Without this, c/lock-file on a bare {cljs 1.11.60} project would try to
+;; fetch e.g. jackson-core-2.8.7.jar from the network (superseded in the main
+;; project's classpath by a higher version, so its JAR isn't cached there).
+{:paths ["src"]
+ :deps {org.clojure/clojurescript {:mvn/version "1.11.60"}
+        reagent/reagent            {:mvn/version "1.2.0"}}}
