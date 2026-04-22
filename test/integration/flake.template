@@ -15,7 +15,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        cljpkgs = clj-nix.packages."${system}";
+        cljpkgs = clj-nix.legacyPackages."${system}";
 
         # Detect if we're on macOS and need to use Linux packages for containers
         isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
@@ -23,7 +23,7 @@
 
         # Use native Linux packages for containers (requires remote builders on macOS)
         containerPkgs = if isDarwin then nixpkgs.legacyPackages.${linuxSystem} else pkgs;
-        containerCljpkgs = if isDarwin then clj-nix.packages.${linuxSystem} else cljpkgs;
+        containerCljpkgs = if isDarwin then clj-nix.legacyPackages.${linuxSystem} else cljpkgs;
 
         # Common function to build a Clojure binary (reusable for containers)
         mkCljBinFor = pkgsSet: cljpkgsSet:

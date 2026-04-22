@@ -39,19 +39,24 @@
     {
       packages = eachSystem ({ pkgs, system }:
         {
-          inherit (pkgs) clj-builder deps-lock mk-deps-cache
-            fake-git
-            mkCljBin mkCljLib mkGraalBin customJdk
-            cljHooks
-            mkBabashka bbTasksFromFile;
+          inherit (pkgs) deps-lock fake-git;
 
           babashka = pkgs.mkBabashka { };
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
 
-          babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
+        });
 
+      legacyPackages = eachSystem ({ pkgs, system }:
+        pkgs // {
+          inherit (pkgs) clj-builder deps-lock mk-deps-cache
+            fake-git
+            mkCljBin mkCljLib mkGraalBin customJdk
+            cljHooks
+            mkBabashka bbTasksFromFile;
+
+          babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
         });
 
       devShells = eachSystem ({ pkgs, ... }: {
