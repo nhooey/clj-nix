@@ -21,14 +21,22 @@ skip_if_darwin_without_remote_builders() {
 # Usage: nix_build_and_log <flake-ref>
 nix_build_and_log() {
   local flake_ref="$1"
-  nix build "$flake_ref" --no-link --print-out-paths >> "$DERIVATIONS"
+  if [ -n "$DERIVATIONS" ]; then
+    nix build "$flake_ref" --no-link --print-out-paths >> "$DERIVATIONS"
+  else
+    nix build "$flake_ref" --no-link --print-out-paths
+  fi
 }
 
 # Build a nix package, log the derivation path, and create a result symlink
 # Usage: nix_build_with_result <flake-ref>
 nix_build_with_result() {
   local flake_ref="$1"
-  nix build "$flake_ref" --print-out-paths >> "$DERIVATIONS"
+  if [ -n "$DERIVATIONS" ]; then
+    nix build "$flake_ref" --print-out-paths >> "$DERIVATIONS"
+  else
+    nix build "$flake_ref" --print-out-paths
+  fi
 }
 
 # Run a nix package and log the derivation path
@@ -36,7 +44,9 @@ nix_build_with_result() {
 nix_run_and_log() {
   local flake_ref="$1"
   shift
-  nix build "$flake_ref" --no-link --print-out-paths >> "$DERIVATIONS"
+  if [ -n "$DERIVATIONS" ]; then
+    nix build "$flake_ref" --no-link --print-out-paths >> "$DERIVATIONS"
+  fi
   nix run "$flake_ref" -- "$@"
 }
 
@@ -47,7 +57,7 @@ setup_temp_project_vars() {
   local base_name="${1:-clj-nix_project}"
   project_dir="$BATS_FILE_TMPDIR/$base_name"
   export project_dir
-  cljnix_dir=$(dirname "$BATS_TEST_DIRNAME")
+  cljnix_dir=$(dirname "$(dirname "$BATS_TEST_DIRNAME")")
   export cljnix_dir
 }
 
@@ -63,7 +73,7 @@ copy_and_init_project() {
 # Note: Expects cljnix_dir_copy to be set by caller
 create_project_from_template() {
   nix flake new --template . "$project_dir"
-  echo "cljnixUrl: $cljnix_dir_copy" | mustache "$cljnix_dir/test/integration/flake.template" > "$project_dir/flake.nix"
+  echo "cljnixUrl: $cljnix_dir_copy" | mustache "$cljnix_dir/test/integration/flake-template.nix" > "$project_dir/flake.nix"
 }
 
 # Initialize git and lock the flake

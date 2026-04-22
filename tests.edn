@@ -1,11 +1,11 @@
 #kaocha/v1
 {:tests [{:id         :unit
-          :test-paths ["test/cljnix"]
+          :test-paths ["test/unit" "test/helpers"]
           :skip-meta  [:network]}
          {:id         :integration
           :test-paths ["test/integration"]
           :skip-meta  [:network]}
          {:id         :network-integration
-          :test-paths ["test/cljnix" "test/integration"]
+          :test-paths ["test/unit" "test/integration"]
           :focus-meta [:network]}]
  :reporter [kaocha.report.progress/report]}
