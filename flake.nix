@@ -35,38 +35,143 @@
           };
         inherit system;
       });
+
+      # Shared base packages for development and testing
+      basePackages = pkgs: [
+        pkgs.jq
+        pkgs.clojure
+        pkgs.babashka
+        pkgs.graalvmPackages.graalvm-ce
+        pkgs.bats
+        pkgs.envsubst
+        pkgs.mustache-go
+        pkgs.diffutils
+      ];
+
+      # Additional packages needed for running tests in sandboxed builds
+      testOnlyPackages = pkgs: [
+        pkgs.git
+        pkgs.nix
+      ];
+
+      # Shared test script definitions - used by both devShells and checks
+      testScripts = rec {
+        unit = ''
+          clojure -M:test -m kaocha.runner :unit "$@"
+        '';
+        integration = ''
+          clojure -M:test -m kaocha.runner :integration "$@"
+        '';
+        e2e = ''
+          bats --timing test
+        '';
+        all = ''
+          echo "Running Clojure unit tests..."
+          ${unit}
+          echo "Running Clojure integration tests..."
+          ${integration}
+          echo "Running bats end-to-end tests..."
+          ${e2e}
+        '';
+      };
     in
     {
       packages = eachSystem ({ pkgs, system }:
+        let
+          # Shared deps cache for all test runners
+          depsCache = pkgs.mk-deps-cache {
+            lockfile = ./deps-lock.json;
+          };
+
+          # Build a test runner derivation for a specific kaocha suite
+          mkTestRunner = { name, kaochaArgs }:
+            pkgs.stdenv.mkDerivation {
+              name = "clj-nix-${name}";
+              src = ./.;
+              nativeBuildInputs = [ pkgs.jdk pkgs.clojure pkgs.fake-git ];
+
+              buildPhase = ''
+                # Copy deps cache to writable location
+                cp -r "${depsCache}" $TMPDIR/home
+                chmod -R u+w $TMPDIR/home
+
+                export HOME="$TMPDIR/home"
+                export JAVA_TOOL_OPTIONS="-Duser.home=$HOME"
+                export CLJ_CONFIG="$HOME/.clojure"
+                export CLJ_CACHE="$TMPDIR/cp_cache"
+                export GITLIBS="$HOME/.gitlibs"
+
+                clojure -M:test -m kaocha.runner ${kaochaArgs}
+              '';
+
+              installPhase = ''
+                mkdir -p $out
+                echo "${name} passed" > $out/result
+              '';
+            };
+        in
         {
-          inherit (pkgs) clj-builder deps-lock mk-deps-cache
-            fake-git
-            mkCljBin mkCljLib mkGraalBin customJdk
-            cljHooks
-            mkBabashka bbTasksFromFile;
+          inherit (pkgs) deps-lock fake-git;
 
           babashka = pkgs.mkBabashka { };
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
 
-          babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
+          # Test runners using clj-nix with locked dependencies
+          test-unit = mkTestRunner {
+            name = "test-unit";
+            kaochaArgs = ":unit";
+          };
 
+          test-integration = mkTestRunner {
+            name = "test-integration";
+            kaochaArgs = ":integration";
+          };
+
+        });
+
+      legacyPackages = eachSystem ({ pkgs, system }:
+        pkgs // {
+          inherit (pkgs) clj-builder deps-lock mk-deps-cache
+            fake-git
+            mkCljBin mkCljLib mkGraalBin customJdk
+            cljHooks
+            mkBabashka bbTasksFromFile;
+
+          babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
+        });
+
+      checks = eachSystem ({ pkgs, ... }:
+        {
+          # Unit tests using clj-nix with locked dependencies (no network needed)
+          tests-unit = self.packages.${pkgs.system}.test-unit;
+
+          # Integration tests using clj-nix with locked dependencies (no network needed)
+          tests-integration = self.packages.${pkgs.system}.test-integration;
+
+          # E2E tests still need nix commands, so use script-based approach
+          tests-e2e = pkgs.stdenv.mkDerivation {
+            name = "clj-nix-tests-e2e";
+            src = self;
+            buildInputs = basePackages pkgs ++ testOnlyPackages pkgs;
+
+            buildPhase = ''
+              export HOME=$TMPDIR
+              ${testScripts.e2e}
+            '';
+
+            installPhase = ''
+              mkdir -p $out
+              echo "Tests passed" > $out/result
+            '';
+          };
         });
 
       devShells = eachSystem ({ pkgs, ... }: {
         default =
           pkgs.devshell.mkShell {
-            packages = [
-              pkgs.jq
-              pkgs.clojure
-              pkgs.babashka
-              pkgs.graalvmPackages.graalvm-ce
-              pkgs.bats
-              pkgs.envsubst
-              pkgs.mustache-go
-              pkgs.diffutils
-            ];
+            packages = basePackages pkgs;
             commands = [
               {
                 name = "update-clojure-deps";
@@ -119,38 +224,25 @@
                 name = "tests-unit";
                 category = "test categories";
                 help = "Run Clojure unit tests";
-                command = ''
-                  clojure -M:test -m kaocha.runner :unit "$@"
-                '';
+                command = testScripts.unit;
               }
               {
                 name = "tests-integration";
                 category = "test categories";
                 help = "Run Clojure integration tests";
-                command = ''
-                  clojure -M:test -m kaocha.runner :integration "$@"
-                '';
+                command = testScripts.integration;
               }
               {
                 name = "tests-e2e";
                 category = "test categories";
                 help = "Run end-to-end tests with bats";
-                command = ''
-                  bats --timing test
-                '';
+                command = testScripts.e2e;
               }
               {
                 name = "tests-all";
                 category = "test categories";
                 help = "Run all tests (Clojure and bats)";
-                command = ''
-                  echo "Running Clojure unit tests..."
-                  clojure -M:test -m kaocha.runner :unit
-                  echo "Running Clojure integration tests..."
-                  clojure -M:test -m kaocha.runner :integration
-                  echo "Running bats end-to-end tests..."
-                  bats --timing test
-                '';
+                command = testScripts.all;
               }
               {
                 name = "tests-bats";
