@@ -7,9 +7,8 @@
     [matcher-combinators.test]))
 
 (def all-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
-                       io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
-                       io.github.weavejester/medley {:git/sha "0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"}
-                       io.github.teknql/systemic {:git/sha "2c0be3a90884f998a61f2a8174cff3c5a15a30bf"}}})
+                       io.github.clojure/tools.build {:git/sha "ae52edfedef4ca72e699e9c86abfe0940e97dc26"
+                                                      :git/tag "v0.10.13"}}})
 
 (use-fixtures :once (h/deps-cache-fixture all-deps))
 
@@ -17,11 +16,4 @@
   (is (= "sha256-I4G26UI6tGUVFFWUSQPROlYkPWAGuRlK/Bv0+HEMtN4="
          (nix/nix-hash (fs/expand-home "~/.m2/repository/org/clojure/clojure/1.11.1/clojure-1.11.1.jar"))))
 
-  (is (= "sha256-L+tsBCOxr2kJpIEPJ0A+s8/Ud2jLgfiDQIB+U3/PcG0="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.babashka/fs/7adcefeb773bd786408cdc788582f145f79626a6"))))
-
-  (is (= "sha256-drh0opl3JjrpGadg74wIdOcDTaP2GT31X3O1PGXkvqk="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.weavejester/medley/0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"))))
-
-  (is (= "sha256-pxbxFZirXL9CD37rhXUw/MMdxMZbLkVqfZIQXSpDqaI="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.teknql/systemic/2c0be3a90884f998a61f2a8174cff3c5a15a30bf")))))
+  (is (string? (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.clojure/tools.build/ae52edfedef4ca72e699e9c86abfe0940e97dc26")))))

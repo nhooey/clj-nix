@@ -8,7 +8,7 @@
     [clojure.tools.deps :as deps]))
 
 (def my-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
-                      babashka/fs {:mvn/version "0.1.5"}
+                      babashka/fs {:mvn/version "0.5.32"}
                       javax.activation/javax.activation-api {:mvn/version "1.2.0"}}})
 
 (use-fixtures :once (h/deps-cache-fixture my-deps))
@@ -26,11 +26,11 @@
          (utils/mvn-repo-info
            (fs/path @mvn/cached-local-repo "org/clojure/pom.contrib/1.1.0/pom.contrib-1.1.0.pom"))))
 
-  (is (= {:mvn-path "babashka/fs/0.1.5/fs-0.1.5.jar"
+  (is (= {:mvn-path "babashka/fs/0.5.32/fs-0.5.32.jar"
           :mvn-repo "https://repo.clojars.org/"
-          :url "https://repo.clojars.org/babashka/fs/0.1.5/fs-0.1.5.jar"}
+          :url "https://repo.clojars.org/babashka/fs/0.5.32/fs-0.5.32.jar"}
          (utils/mvn-repo-info
-           (fs/path @mvn/cached-local-repo "babashka/fs/0.1.5/fs-0.1.5.jar")))))
+           (fs/path @mvn/cached-local-repo "babashka/fs/0.5.32/fs-0.5.32.jar")))))
 
   ;; TODO fix flaky tests or remove SNAPSHOT support
 
@@ -104,7 +104,7 @@
   (is (= false (utils/full-sha? (get-in deps-data [:aliases :build :replace-deps 'io.github.clojure/tools.build])))))
 
 
-(deftest expand-sha-tests
+(deftest ^:network expand-sha-tests
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" deps-data)
@@ -113,7 +113,7 @@
       (is (= deps-data-full
              (deps/slurp-deps (fs/file project-dir "deps.edn")))))))
 
-(deftest expand-sha-ignore-not-found-tests
+(deftest ^:network expand-sha-ignore-not-found-tests
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" deps-data)
