@@ -1,4 +1,4 @@
-(ns leiningen-example-project.core
+(ns leiningen-example.core
   (:gen-class))
 
 (defn -main

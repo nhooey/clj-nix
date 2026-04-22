@@ -10,9 +10,9 @@ setup_file() {
 
   setup_temp_project_vars "cljs-nix_project"
 
-  cljs_project_path="$cljnix_dir/test/clojurescript-example-project"
+  cljs_project_path="$cljnix_dir/test/fixtures/example-projects/clojurescript"
   copy_and_init_project "$cljs_project_path"
-  echo "cljnixUrl: $cljnix_dir" | mustache "$project_dir/flake.template" > "$project_dir/flake.nix"
+  echo "cljnixUrl: $cljnix_dir" | mustache "$project_dir/flake-template.nix" > "$project_dir/flake.nix"
 
   cd "$project_dir" || exit
   nix flake lock

@@ -15,7 +15,7 @@
  :paths ["src"]
  :aliases
  {:main {:main-opts ["-m" "core"]}
-  :test {:extra-paths ["test" "pkgs"]
+  :test {:extra-paths ["test" "test/helpers" "pkgs"]
          :extra-deps {lambdaisland/kaocha {:mvn/version "1.91.1392"}
                       nubank/matcher-combinators {:mvn/version "3.10.0"}
 

@@ -1,6 +1,6 @@
-(ns leiningen-example-project.core-test
+(ns leiningen-example.core-test
   (:require [clojure.test :refer :all]
-            [leiningen-example-project.core :refer :all]))
+            [leiningen-example.core :refer :all]))
 
 (deftest a-test
   (testing "I test something very important."

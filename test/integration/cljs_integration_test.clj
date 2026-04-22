@@ -1,4 +1,4 @@
-(ns integration.cljs-test
+(ns integration.cljs-integration-test
   (:require
     [clojure.test :refer [deftest is testing]]
     [babashka.fs :as fs]
