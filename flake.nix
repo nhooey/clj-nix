@@ -68,6 +68,7 @@
               pkgs.babashka
               pkgs.graalvmPackages.graalvm-ce
               pkgs.bats
+              pkgs.parallel
               pkgs.envsubst
               pkgs.mustache-go
               pkgs.diffutils
@@ -141,7 +142,9 @@
                 category = "test categories";
                 help = "Run end-to-end tests with bats";
                 command = ''
-                  bats --timing test
+                  CORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
+                  echo "Running end-to-end tests in parallel on $CORES cores..."
+                  bats --timing --jobs "$CORES" test
                 '';
               }
               {
