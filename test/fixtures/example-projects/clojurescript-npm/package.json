@@ -1,0 +1,7 @@
+{
+  "name": "clojurescript-npm-fixture",
+  "private": true,
+  "devDependencies": {
+    "left-pad": "^1.3.0"
+  }
+}

@@ -9,6 +9,17 @@ OUTPUTS:
 EXTENSIBILITY:
 The build system supports custom build processes via the `buildCommand` parameter.
 Default uses `clj-builder cljs-compile` with shadow-cljs.
+
+NPM / node_modules:
+  npmRoot       Path containing package.json / package-lock.json. When set,
+                a node_modules tree is built with importNpmLock and symlinked
+                into the build dir before preBuild.
+                Example: npmRoot = ./.;
+  nodeModules   Escape hatch: caller-supplied pre-built node_modules
+                derivation. Overrides `npmRoot` when set.
+                Example: nodeModules = myCustomNodeModules;
+  The resolved tree is exposed via passthru.node-modules so callers can
+  reuse it for devshell watch-mode commands.
 */
 
 { stdenv
@@ -16,6 +27,7 @@ Default uses `clj-builder cljs-compile` with shadow-cljs.
 , clojure
 , nodejs
 , writeText
+, importNpmLock
 
   # Custom utils
 , clj-builder
@@ -33,6 +45,8 @@ Default uses `clj-builder cljs-compile` with shadow-cljs.
 , lockfile ? null
 , shadow-cljs-opts ? null
 , nodejs-package ? nodejs
+, npmRoot ? null
+, nodeModules ? null
 , ...
 }@attrs:
 
@@ -48,8 +62,21 @@ let
     "lockfile"
     "shadow-cljs-opts"
     "nodejs-package"
+    "npmRoot"
+    "nodeModules"
     "nativeBuildInputs"
   ];
+
+  # Resolve node_modules from either a caller-supplied derivation or an
+  # npmRoot containing package.json + package-lock.json.
+  resolvedNodeModules =
+    if nodeModules != null then nodeModules
+    else if npmRoot != null then
+      importNpmLock.buildNodeModules {
+        inherit npmRoot;
+        nodejs = nodejs-package;
+      }
+    else null;
 
   deps-cache = mk-deps-cache {
     lockfile = if isNull lockfile then (projectSrc + "/deps-lock.json") else lockfile;
@@ -76,6 +103,7 @@ stdenv.mkDerivation ({
 
   passthru = {
     inherit deps-cache fullId artifactId buildTarget buildId;
+    node-modules = resolvedNodeModules;
   };
 
   patchPhase =
@@ -87,6 +115,10 @@ stdenv.mkDerivation ({
 
   buildPhase =
     ''
+      ${lib.optionalString (resolvedNodeModules != null) ''
+        ln -s ${resolvedNodeModules}/node_modules node_modules
+      ''}
+
       runHook preBuild
 
       export HOME="${deps-cache}"
