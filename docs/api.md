@@ -257,6 +257,12 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 - **nodeModules**: Escape hatch for providing a pre-built `node_modules`
   derivation directly. Overrides `npmRoot` when set. (Default: `null`)
 
+- **jdk**: Optional JDK package. When non-`null`, the `clojure` used for the
+  build is overridden via `clojure.override { inherit jdk; }` to run on this
+  JDK, and the JDK is also added to `nativeBuildInputs` so `java` is available
+  at the requested version. When `null`, the ambient `clojure` (with its
+  default JDK) is used. (Default: `null`)
+
 !!! note
 
     ClojureScript builds require a `shadow-cljs.edn` configuration file in your
@@ -325,6 +331,17 @@ mkCljsApp {
   version = "1.0.0";
   # Project root contains package.json and package-lock.json.
   npmRoot = ./.;
+}
+```
+
+**Pinned JDK example**:
+
+```nix
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/with-jdk";
+  version = "1.0.0";
+  jdk = pkgs.jdk21;
 }
 ```
 
