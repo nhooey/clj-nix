@@ -42,6 +42,18 @@ JDK:
                 requested version. When null, the ambient `clojure` (with
                 its default JDK) is used.
                 Example: jdk = pkgs.jdk21;
+
+Install layout:
+  installPaths     List of relative source paths copied into $out during
+                   installPhase. When null, falls back to the legacy
+                   "target/cljs/<buildId>" then "public/" then any
+                   target/..js search. installPaths and installCommand are
+                   orthogonal: installPaths runs first, then installCommand
+                   (if set).
+                   Example: installPaths = [ "resources/public" ];
+  installCommand   Full override of the installPhase copy logic. Receives
+                   $out in scope. Runs after installPaths (when both set).
+                   Example: installCommand = "cp -r dist/. $out/";
 */
 
 { stdenv
@@ -71,6 +83,8 @@ JDK:
 , nodeModules ? null
 , aliases ? [ ]
 , jdk ? null
+, installPaths ? null
+, installCommand ? null
 , ...
 }@attrs:
 
@@ -90,6 +104,8 @@ let
     "nodeModules"
     "aliases"
     "jdk"
+    "installPaths"
+    "installCommand"
     "nativeBuildInputs"
   ];
 
@@ -183,21 +199,32 @@ stdenv.mkDerivation ({
 
       mkdir -p $out
 
-      # Find and copy compiled output
-      if [ -d "target/cljs/${buildId}" ]; then
-        cp -r target/cljs/${buildId}/* $out/
-      elif [ -d "public" ]; then
-        # shadow-cljs default output for browser builds
-        cp -r public/* $out/
-      else
-        echo "Warning: No compiled output found in expected locations"
-        # Copy any .js files found in target
-        find target -name "*.js" -exec cp {} $out/ \;
-      fi
+      ${if installPaths != null then
+          lib.concatMapStringsSep "\n" (p: ''
+            if [ -e "${p}" ]; then
+              cp -r ${p} $out/
+            fi
+          '') installPaths
+        else ''
+          # Legacy fallback: find and copy compiled output from conventional locations
+          if [ -d "target/cljs/${buildId}" ]; then
+            cp -r target/cljs/${buildId}/* $out/
+          elif [ -d "public" ]; then
+            # shadow-cljs default output for browser builds
+            cp -r public/* $out/
+          else
+            echo "Warning: No compiled output found in expected locations"
+            # Copy any .js files found in target
+            find target -name "*.js" -exec cp {} $out/ \;
+          fi
+        ''}
+
+      ${lib.optionalString (installCommand != null) installCommand}
 
       # For Node.js builds, create executable wrapper
       ${if buildTarget == "node" then ''
         if [ -f "$out/main.js" ]; then
+          mkdir -p $out/bin
           cat > $out/bin/${artifactId} <<EOF
       #!${nodejs-package}/bin/node
       require('$out/main.js');
