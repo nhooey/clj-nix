@@ -263,6 +263,17 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
   at the requested version. When `null`, the ambient `clojure` (with its
   default JDK) is used. (Default: `null`)
 
+- **installPaths**: List of relative source directories whose CONTENTS are
+  copied into `$out` during `installPhase`. The default matches the common
+  shadow-cljs browser layout of `:output-dir "public/js"` served from
+  `public/`. For other layouts, override — e.g. `[ "resources/public" ]`
+  for `:output-dir "resources/public/js"`. (Default: `[ "public" ]`)
+
+- **installCommand**: Shell snippet evaluated during `installPhase` with
+  `$out` in scope. Runs after `installPaths`. Use for layouts that don't
+  fit the directory-contents pattern, or to layer additional files on top.
+  (Default: `null`)
+
 !!! note
 
     ClojureScript builds require a `shadow-cljs.edn` configuration file in your
@@ -342,6 +353,21 @@ mkCljsApp {
   name = "me.lafuente/with-jdk";
   version = "1.0.0";
   jdk = pkgs.jdk21;
+}
+```
+
+**Custom install layout example** (shadow-cljs writes to `resources/public/js`):
+
+```nix
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/custom-install";
+  version = "1.0.0";
+  installPaths = [ "resources/public" ];
+  # Drop a marker file after the copy runs.
+  installCommand = ''
+    echo "built at $(date -u +%FT%TZ)" > "$out/BUILT_AT"
+  '';
 }
 ```
 
