@@ -22,7 +22,8 @@
         packages = {
           default = pkgs.mkCljsApp {
             projectSrc = ./.;
-            name = "cljs-aliases-example/app";
+            name = "app";
+            libCoordinate = "cljs-aliases-example/app";
             version = "0.1.0";
             buildTarget = "browser";
             buildId = "app";

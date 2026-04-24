@@ -18,6 +18,9 @@
   for shadow-cljs projects with `:output-dir "resources/public/js"`).
   `installPaths` defaults to `[ "public" ]`, matching the common shadow-cljs
   browser layout; each entry's directory contents are copied into `$out`
+- `mkCljsApp`: added `libCoordinate` argument as the dedicated
+  Maven-style `org/artifact` coordinate. `name` is now the derivation
+  name only; `libCoordinate` defaults to `"${name}/${name}"` when unset
 
 ## 0.4.0 (2024-11-20)
 
