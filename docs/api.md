@@ -219,9 +219,11 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 
 - **projectSrc**: Project source code.
 
-- **name**: Derivation and ClojureScript project name. It's recommended to use a
-  namespaced name. If not, a namespace is added automatically. E.g. `foo` will
-  be transformed to `foo/foo`
+- **name**: Derivation name. Plain derivation name only (no `/`).
+
+- **libCoordinate**: Maven-style `org/artifact` coordinate passed through to
+  `clj-builder cljs-compile`. When `null`, defaults to `"${name}/${name}"`.
+  (Default: `null`)
 
 - **version**: Derivation and ClojureScript project version. (Default: `DEV`)
 
@@ -285,7 +287,8 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/my-spa";
+  name = "my-spa";
+  libCoordinate = "me.lafuente/my-spa";
   version = "1.0.0";
   buildTarget = "browser";
   buildId = "app";
@@ -297,7 +300,8 @@ mkCljsApp {
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/my-node-app";
+  name = "my-node-app";
+  libCoordinate = "me.lafuente/my-node-app";
   version = "1.0.0";
   buildTarget = "node";
   buildId = "server";
@@ -310,7 +314,8 @@ mkCljsApp {
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/custom-build";
+  name = "custom-build";
+  libCoordinate = "me.lafuente/custom-build";
   buildCommand = ''
     npx shadow-cljs release app --config-merge '{:compiler-options {:optimizations :advanced}}'
   '';
@@ -328,7 +333,8 @@ mkCljsApp {
 #               :main-opts  ["-m" "shadow.cljs.devtools.cli"]}}}
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/with-alias";
+  name = "with-alias";
+  libCoordinate = "me.lafuente/with-alias";
   aliases = [ "shadow-cljs" ];
 }
 ```
@@ -338,7 +344,8 @@ mkCljsApp {
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/with-npm";
+  name = "with-npm";
+  libCoordinate = "me.lafuente/with-npm";
   version = "1.0.0";
   # Project root contains package.json and package-lock.json.
   npmRoot = ./.;
@@ -350,7 +357,8 @@ mkCljsApp {
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/with-jdk";
+  name = "with-jdk";
+  libCoordinate = "me.lafuente/with-jdk";
   version = "1.0.0";
   jdk = pkgs.jdk21;
 }
@@ -361,7 +369,8 @@ mkCljsApp {
 ```nix
 mkCljsApp {
   projectSrc = ./.;
-  name = "me.lafuente/custom-install";
+  name = "custom-install";
+  libCoordinate = "me.lafuente/custom-install";
   version = "1.0.0";
   installPaths = [ "resources/public" ];
   # Drop a marker file after the copy runs.

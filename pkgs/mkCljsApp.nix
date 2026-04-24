@@ -10,6 +10,14 @@ EXTENSIBILITY:
 The build system supports custom build processes via the `buildCommand` parameter.
 Default uses `clj-builder cljs-compile` with shadow-cljs.
 
+Naming:
+  name             Derivation name. Required. Plain derivation name only
+                   (no "/").
+  libCoordinate    Optional Maven-style org/artifact coordinate passed
+                   through to clj-builder cljs-compile. Defaults to
+                   "${name}/${name}".
+                   Example: libCoordinate = "my-org/my-app";
+
 Aliases:
   aliases       List of deps.edn alias names (strings) activated for the
                 default build invocation. When non-empty, the default
@@ -73,6 +81,7 @@ Install layout:
   # User options
   projectSrc
 , name
+, libCoordinate ? null
 , version ? "DEV"
 , buildTarget ? "browser"  # "browser" or "node"
 , buildId ? "app"
@@ -94,6 +103,7 @@ let
   extra-attrs = builtins.removeAttrs attrs [
     "projectSrc"
     "name"
+    "libCoordinate"
     "version"
     "buildTarget"
     "buildId"
@@ -129,7 +139,9 @@ let
     lockfile = if isNull lockfile then (projectSrc + "/deps-lock.json") else lockfile;
   };
 
-  fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
+  # `name` is the derivation name. `libCoordinate` is the Maven-style
+  # org/artifact coordinate used by clj-builder cljs-compile.
+  fullId = if libCoordinate != null then libCoordinate else "${name}/${name}";
   artifactId = builtins.elemAt (lib.strings.splitString "/" fullId) 1;
 
 in
