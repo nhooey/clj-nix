@@ -4,6 +4,9 @@
 
 - Added ClojureScript support via `mkCljsApp`, compiling to JavaScript for
   Node.js and browser targets using shadow-cljs
+- `mkCljsApp`: added `aliases` argument to activate `deps.edn` aliases for
+  the default `shadow-cljs` build (e.g. `aliases = [ "shadow-cljs" ]` when
+  `thheller/shadow-cljs` lives under an alias instead of top-level `:deps`)
 
 ## 0.4.0 (2024-11-20)
 

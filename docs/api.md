@@ -240,6 +240,14 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 - **nodejs-package**: Node.js package to use for building and (if target is node) running.
   (Default: `pkgs.nodejs`)
 
+- **aliases**: List of `deps.edn` alias names (strings) activated for the
+  default build invocation. When non-empty, the default command becomes
+  `clojure -M:a1:a2 <build-id>` — the alias is expected to provide
+  `:main-opts ["-m" "shadow.cljs.devtools.cli"]` (the standard `shadow-cljs`
+  idiom), so the explicit `-m` is omitted. When empty, the command is
+  `clojure -M -m shadow.cljs.devtools.cli <build-id>`, which assumes
+  `shadow-cljs` is in top-level `:deps`. (Default: `[ ]`)
+
 !!! note
 
     ClojureScript builds require a `shadow-cljs.edn` configuration file in your
@@ -280,6 +288,22 @@ mkCljsApp {
   buildCommand = ''
     npx shadow-cljs release app --config-merge '{:compiler-options {:optimizations :advanced}}'
   '';
+}
+```
+
+**`shadow-cljs` under a `deps.edn` alias example**:
+
+```nix
+# Given a deps.edn like:
+#   {:paths   ["src"]
+#    :deps    {org.clojure/clojurescript {:mvn/version "..."}}
+#    :aliases {:shadow-cljs
+#              {:extra-deps {thheller/shadow-cljs {:mvn/version "..."}}
+#               :main-opts  ["-m" "shadow.cljs.devtools.cli"]}}}
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/with-alias";
+  aliases = [ "shadow-cljs" ];
 }
 ```
 
