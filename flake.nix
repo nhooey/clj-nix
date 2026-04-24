@@ -35,9 +35,129 @@
           };
         inherit system;
       });
+
+      # Shared base packages for development and testing
+      basePackages = pkgs: [
+        pkgs.jq
+        pkgs.clojure
+        pkgs.babashka
+        pkgs.graalvmPackages.graalvm-ce
+        pkgs.bats
+        pkgs.envsubst
+        pkgs.mustache-go
+        pkgs.diffutils
+      ];
+
+      # Additional packages needed for running tests in sandboxed builds
+      testOnlyPackages = pkgs: [
+        pkgs.git
+        pkgs.nix
+      ];
+
+      # Helper function to create kaocha test runner command
+      # Returns the base kaocha command without "$@" for use in derivations
+      mkKaochaCommand = suite: "clojure -M:test -m kaocha.runner :${suite}";
+
+      # Shared test script definitions - used by both devShells and checks
+      testScripts = rec {
+        unit = ''${mkKaochaCommand "unit"} "$@"'';
+        integration = ''${mkKaochaCommand "integration"} "$@"'';
+        network-integration = ''${mkKaochaCommand "network-integration"} "$@"'';
+        e2e = ''
+          bats --timing test
+        '';
+        all = ''
+          echo "Running Clojure unit tests..."
+          ${unit}
+          echo "Running Clojure integration tests..."
+          ${integration}
+          echo "Running Clojure network integration tests..."
+          ${network-integration}
+          echo "Running bats end-to-end tests..."
+          ${e2e}
+        '';
+      };
     in
     {
       packages = eachSystem ({ pkgs, system }:
+        let
+          # Generate _remote.repositories files for Maven deps
+          # Format: filename>repo-name=
+          # This allows mvn-repo-info to determine which repo a dep came from
+          lockData = builtins.fromJSON (builtins.readFile ./deps-lock.json);
+          mavenRepoMetadata = builtins.concatMap
+            ({ mvn-path, mvn-repo, ... }:
+              let
+                dir = builtins.dirOf mvn-path;
+                filename = builtins.baseNameOf mvn-path;
+                # Extract repo name from URL (central or clojars)
+                repoName = if nixpkgs.lib.hasInfix "clojars" mvn-repo
+                  then "clojars"
+                  else "central";
+                metadataPath = "${dir}/_remote.repositories";
+                # Maven metadata format
+                content = "${filename}>${repoName}=\n";
+              in
+              [{
+                path = metadataPath;
+                inherit content;
+              }]
+            )
+            lockData.mvn-deps;
+
+          # Group by path and concatenate contents for files in same directory
+          groupedMetadata = nixpkgs.lib.foldl
+            (acc: { path, content }:
+              if builtins.hasAttr path acc
+              then acc // { ${path} = acc.${path} + content; }
+              else acc // { ${path} = content; }
+            )
+            { }
+            mavenRepoMetadata;
+
+          # Convert to list format expected by maven-extra
+          mavenExtra = nixpkgs.lib.mapAttrsToList
+            (path: content: { inherit path content; })
+            groupedMetadata;
+
+          # Shared deps cache for all test runners
+          depsCache = pkgs.mk-deps-cache {
+            lockfile = ./deps-lock.json;
+            maven-extra = mavenExtra;
+          };
+
+          # Build a test runner derivation for a specific kaocha suite
+          mkTestRunner = { name, suite }:
+            pkgs.stdenv.mkDerivation {
+              name = "clj-nix-${name}";
+              src = ./.;
+              nativeBuildInputs = [ pkgs.jdk pkgs.clojure pkgs.fake-git ];
+
+              buildPhase = ''
+                # Copy deps cache to writable location with proper structure
+                cp -rL "${depsCache}" $TMPDIR/home
+                chmod -R u+w $TMPDIR/home
+
+                export HOME="$TMPDIR/home"
+                export JAVA_TOOL_OPTIONS="-Duser.home=$HOME"
+                export CLJ_CONFIG="$HOME/.clojure"
+                export CLJ_CACHE="$TMPDIR/cp_cache"
+                export GITLIBS="$HOME/.gitlibs"
+
+                # Run tests - network is blocked by Nix sandbox anyway
+                ${mkKaochaCommand suite} || {
+                  echo "Tests failed. Checking for missing dependencies..."
+                  find $HOME/.m2/repository -name "*.part.lock" 2>/dev/null || true
+                  exit 1
+                }
+              '';
+
+              installPhase = ''
+                mkdir -p $out
+                echo "${name} passed" > $out/result
+              '';
+            };
+        in
         {
           inherit (pkgs) deps-lock fake-git;
 
@@ -45,6 +165,17 @@
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
+
+          # Test runners using clj-nix with locked dependencies
+          test-unit = mkTestRunner {
+            name = "test-unit";
+            suite = "unit";
+          };
+
+          test-integration = mkTestRunner {
+            name = "test-integration";
+            suite = "integration";
+          };
 
         });
 
@@ -56,22 +187,25 @@
             cljHooks
             mkBabashka bbTasksFromFile;
 
+          babashka = pkgs.mkBabashka { };
+          babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
+
+          docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
+
           babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
+
+        });
+
+      checks = eachSystem ({ pkgs, system }:
+        {
+          tests-unit = self.packages.${system}.test-unit;
+          tests-integration = self.packages.${system}.test-integration;
         });
 
       devShells = eachSystem ({ pkgs, ... }: {
         default =
           pkgs.devshell.mkShell {
-            packages = [
-              pkgs.jq
-              pkgs.clojure
-              pkgs.babashka
-              pkgs.graalvmPackages.graalvm-ce
-              pkgs.bats
-              pkgs.envsubst
-              pkgs.mustache-go
-              pkgs.diffutils
-            ];
+            packages = basePackages pkgs;
             commands = [
               {
                 name = "update-clojure-deps";
@@ -124,38 +258,31 @@
                 name = "tests-unit";
                 category = "test categories";
                 help = "Run Clojure unit tests";
-                command = ''
-                  clojure -M:test -m kaocha.runner :unit "$@"
-                '';
+                command = testScripts.unit;
               }
               {
                 name = "tests-integration";
                 category = "test categories";
-                help = "Run Clojure integration tests";
-                command = ''
-                  clojure -M:test -m kaocha.runner :integration "$@"
-                '';
+                help = "Run Clojure integration tests (sandbox-compatible only)";
+                command = testScripts.integration;
+              }
+              {
+                name = "tests-network";
+                category = "test categories";
+                help = "Run Clojure network-requiring integration tests (requires internet)";
+                command = testScripts.network-integration;
               }
               {
                 name = "tests-e2e";
                 category = "test categories";
                 help = "Run end-to-end tests with bats";
-                command = ''
-                  bats --timing test
-                '';
+                command = testScripts.e2e;
               }
               {
                 name = "tests-all";
                 category = "test categories";
                 help = "Run all tests (Clojure and bats)";
-                command = ''
-                  echo "Running Clojure unit tests..."
-                  clojure -M:test -m kaocha.runner :unit
-                  echo "Running Clojure integration tests..."
-                  clojure -M:test -m kaocha.runner :integration
-                  echo "Running bats end-to-end tests..."
-                  bats --timing test
-                '';
+                command = testScripts.all;
               }
               {
                 name = "tests-bats";

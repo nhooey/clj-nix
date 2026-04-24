@@ -18,11 +18,14 @@
 
 ;; Deps management
 (defn prep-deps
-  "Prep dependencies from a deps map (downloads them to local cache)."
+  "Prep dependencies from a deps map (downloads them to local cache).
+   Skips if running in Nix sandbox (deps already cached)."
   [deps]
-  (let [f (deps-file deps)]
-    (tools/prep {:user nil :project f})
-    (fs/delete f)))
+  ;; Skip if in Nix build (NIX_BUILD_TOP is set) - deps already in cache
+  (when-not (System/getenv "NIX_BUILD_TOP")
+    (let [f (deps-file deps)]
+      (tools/prep {:user nil :project f})
+      (fs/delete f))))
 
 (defn basis
   "Create a basis from a deps map."

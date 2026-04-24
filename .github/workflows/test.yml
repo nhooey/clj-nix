@@ -27,16 +27,16 @@ jobs:
         run: |
           nix develop --command echo
 
-      - name: "Tests: Unit"
+      - name: "Tests: Unit + Integration (Nix Flake Check)"
         run: |
-          nix develop --command tests-unit
+          nix flake check
 
-      - name: "Tests: Integration"
+      - name: "Tests: Network Integration"
         run: |
-          nix develop --command tests-integration
+          nix develop --command tests-network
 
       - name: "Tests: End-to-end"
         run: |
           nix develop --command tests-e2e
           echo "Derivations:"
-          cat "/tmp/.cljnix-derivations"
+          cat "/tmp/.cljnix-derivations" || true

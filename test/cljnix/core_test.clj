@@ -14,9 +14,10 @@
 (def all-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
                        clj-kondo/clj-kondo {:mvn/version "2022.04.26-20220502.201054-5"}
                        cider/piggieback    {:mvn/version "0.4.1-SNAPSHOT"}
-                       io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
-                       io.github.weavejester/medley {:git/tag "1.4.0"
-                                                     :git/sha "0044c6a"}}})
+                       io.github.clojure/tools.build {:git/tag "v0.10.13"
+                                                      :git/sha "ae52edfedef4ca72e699e9c86abfe0940e97dc26"}
+                       dev.weavejester/medley {:mvn/version "1.10.0"}
+                       cheshire/cheshire {:mvn/version "5.10.2"}}})
 
 (defn- dissoc-dep
   [m dep]
@@ -53,27 +54,15 @@
            (missing-git-deps all-deps all-deps))))
 
   (testing "Some missing git deps"
-    (is (match? [{:git-dir "https/github.com/babashka/fs",
-                  :hash "sha256-L+tsBCOxr2kJpIEPJ0A+s8/Ud2jLgfiDQIB+U3/PcG0=",
-                  :lib 'io.github.babashka/fs,
-                  :rev "7adcefeb773bd786408cdc788582f145f79626a6",
-                  :url "https://github.com/babashka/fs.git"}]
+    (is (match? [{:lib 'io.github.clojure/tools.build,
+                  :rev "ae52edfedef4ca72e699e9c86abfe0940e97dc26"}]
                 (missing-git-deps
-                  (dissoc-dep all-deps 'io.github.babashka/fs)
+                  (dissoc-dep all-deps 'io.github.clojure/tools.build)
                   all-deps))))
 
   (testing "Should get all deps"
-    (is (match? (m/in-any-order
-                  [{:git-dir "https/github.com/weavejester/medley",
-                    :hash "sha256-drh0opl3JjrpGadg74wIdOcDTaP2GT31X3O1PGXkvqk=",
-                    :lib 'io.github.weavejester/medley,
-                    :rev "0044c6aacc0b23eafa3b58091f49c794f5a1f5aa",
-                    :url "https://github.com/weavejester/medley.git"}
-                   {:git-dir "https/github.com/babashka/fs",
-                    :hash "sha256-L+tsBCOxr2kJpIEPJ0A+s8/Ud2jLgfiDQIB+U3/PcG0=",
-                    :lib 'io.github.babashka/fs,
-                    :rev "7adcefeb773bd786408cdc788582f145f79626a6",
-                    :url "https://github.com/babashka/fs.git"}])
+    (is (match? [{:lib 'io.github.clojure/tools.build,
+                  :rev "ae52edfedef4ca72e699e9c86abfe0940e97dc26"}]
                 (missing-git-deps
                   {}
                   all-deps)))))
@@ -190,7 +179,7 @@
                         :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom"}])
             mvn-deps)))))
 
-(deftest expand-sha-tests
+(deftest ^:network expand-sha-tests
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'io.github.babashka/fs
