@@ -10,6 +10,16 @@ EXTENSIBILITY:
 The build system supports custom build processes via the `buildCommand` parameter.
 Default uses `clj-builder cljs-compile` with shadow-cljs.
 
+Naming:
+  name             Derivation name. Required. Must be a plain derivation name
+                   (no "/"). Historically this argument was overloaded to
+                   carry a Maven-style org/artifact coordinate when it
+                   contained "/"; that form still works but emits a
+                   deprecation warning.
+  libCoordinate    Optional org/artifact coordinate passed through to
+                   clj-builder cljs-compile. Defaults to "${name}/${name}".
+                   Example: libCoordinate = "my-org/my-app";
+
 NPM / node_modules:
   npmRoot       Path containing package.json / package-lock.json. When set,
                 a node_modules tree is built with importNpmLock and symlinked
@@ -72,6 +82,7 @@ Install layout:
   # User options
   projectSrc
 , name
+, libCoordinate ? null
 , version ? "DEV"
 , buildTarget ? "browser"  # "browser" or "node"
 , buildId ? "app"
@@ -93,6 +104,7 @@ let
   extra-attrs = builtins.removeAttrs attrs [
     "projectSrc"
     "name"
+    "libCoordinate"
     "version"
     "buildTarget"
     "buildId"
@@ -128,7 +140,19 @@ let
     lockfile = if isNull lockfile then (projectSrc + "/deps-lock.json") else lockfile;
   };
 
-  fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
+  # `name` is the derivation name. libCoordinate is the Maven-style
+  # org/artifact coordinate used by clj-builder cljs-compile. For backwards
+  # compatibility, a slash in `name` is still accepted as a coordinate but
+  # emits a deprecation warning.
+  nameHasSlash = lib.strings.hasInfix "/" name;
+  fullId =
+    if libCoordinate != null then libCoordinate
+    else if nameHasSlash then
+      lib.warn
+        ("mkCljsApp: passing an org/artifact coordinate via `name` is deprecated; "
+        + "use `libCoordinate = \"" + name + "\";` and set `name` to a plain derivation name.")
+        name
+    else "${name}/${name}";
   artifactId = builtins.elemAt (lib.strings.splitString "/" fullId) 1;
 
 in
