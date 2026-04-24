@@ -248,6 +248,15 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
   `clojure -M -m shadow.cljs.devtools.cli <build-id>`, which assumes
   `shadow-cljs` is in top-level `:deps`. (Default: `[ ]`)
 
+- **npmRoot**: Path containing `package.json` and `package-lock.json`. When set,
+  `node_modules` is built via `pkgs.importNpmLock.buildNodeModules` and
+  symlinked into the build directory before `preBuild`. The resolved tree is
+  also exposed on `passthru.node-modules` so that devshell watch-mode commands
+  can reuse it. (Default: `null`)
+
+- **nodeModules**: Escape hatch for providing a pre-built `node_modules`
+  derivation directly. Overrides `npmRoot` when set. (Default: `null`)
+
 !!! note
 
     ClojureScript builds require a `shadow-cljs.edn` configuration file in your
@@ -304,6 +313,18 @@ mkCljsApp {
   projectSrc = ./.;
   name = "me.lafuente/with-alias";
   aliases = [ "shadow-cljs" ];
+}
+```
+
+**npm / `node_modules` example**:
+
+```nix
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/with-npm";
+  version = "1.0.0";
+  # Project root contains package.json and package-lock.json.
+  npmRoot = ./.;
 }
 ```
 

@@ -7,6 +7,9 @@
 - `mkCljsApp`: added `aliases` argument to activate `deps.edn` aliases for
   the default `shadow-cljs` build (e.g. `aliases = [ "shadow-cljs" ]` when
   `thheller/shadow-cljs` lives under an alias instead of top-level `:deps`)
+- `mkCljsApp`: added `npmRoot` and `nodeModules` arguments for building the
+  project's `node_modules` via `pkgs.importNpmLock.buildNodeModules`; the
+  resolved tree is exposed on `passthru.node-modules` for devshell reuse
 
 ## 0.4.0 (2024-11-20)
 
