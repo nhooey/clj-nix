@@ -10,9 +10,9 @@ setup_file() {
 
   setup_temp_project_vars "clj-nix_project"
 
-  leiningen_project_path="$cljnix_dir/test/leiningen-example-project"
+  leiningen_project_path="$cljnix_dir/test/fixtures/example-projects/leiningen"
   copy_and_init_project "$leiningen_project_path"
-  echo "cljnixUrl: $cljnix_dir" | mustache "$project_dir/flake.template" > "$project_dir/flake.nix"
+  echo "cljnixUrl: $cljnix_dir" | mustache "$project_dir/flake-template.nix" > "$project_dir/flake.nix"
 
   cd "$project_dir" || exit
   ls -la
