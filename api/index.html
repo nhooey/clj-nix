@@ -1233,6 +1233,13 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 <p><strong>nodeModules</strong>: Escape hatch for providing a pre-built <code>node_modules</code>
   derivation directly. Overrides <code>npmRoot</code> when set. (Default: <code>null</code>)</p>
 </li>
+<li>
+<p><strong>jdk</strong>: Optional JDK package. When non-<code>null</code>, the <code>clojure</code> used for the
+  build is overridden via <code>clojure.override { inherit jdk; }</code> to run on this
+  JDK, and the JDK is also added to <code>nativeBuildInputs</code> so <code>java</code> is available
+  at the requested version. When <code>null</code>, the ambient <code>clojure</code> (with its
+  default JDK) is used. (Default: <code>null</code>)</p>
+</li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1290,6 +1297,14 @@ for configuration details.</p>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  <span class="ss">npmRoot</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
 </code></pre></div>
+<p><strong>Pinned JDK example</strong>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkCljsApp <span class="p">{</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-jdk&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  <span class="ss">jdk</span> <span class="o">=</span> pkgs<span class="o">.</span>jdk21<span class="p">;</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
+</code></pre></div>
 <h3 id="mkbabashka">mkBabashka</h3>
 <p>Builds <a href="https://github.com/babashka/babashka/">Babashka</a> with the specified
 features. See
@@ -1312,9 +1327,9 @@ insensitive and we can omit the <code>BABASHKA_FEATURE_</code> prefix.</p>
 </li>
 </ul>
 <p><strong>Example</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkBabashka <span class="p">{</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  <span class="ss">withFeatures</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;jdbc&quot;</span> <span class="s2">&quot;sqlite&quot;</span> <span class="p">];</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mkBabashka <span class="p">{</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  <span class="ss">withFeatures</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;jdbc&quot;</span> <span class="s2">&quot;sqlite&quot;</span> <span class="p">];</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="helpers">Helpers</h2>
 <ul>
@@ -1337,11 +1352,11 @@ attributes (those without a default are mandatory):</p>
 <p><strong>java-opts</strong>: Extra arguments for the Java command (Default: <code>[]</code>)</p>
 <p><strong>extra-args</strong>: Extra arguments for the Clojure application (Default: <code>[]</code>)</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mkCljCli <span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  <span class="ss">jdkDrv</span> <span class="o">=</span> self<span class="o">.</span>packages<span class="o">.</span><span class="s2">&quot;</span><span class="si">${</span>system<span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span>jdk-tuto<span class="p">;</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  <span class="ss">java-opts</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;-Dclojure.compiler.direct-linking=true&quot;</span> <span class="p">];</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  <span class="ss">extra-args</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;--foo&quot;</span> <span class="s2">&quot;bar&quot;</span> <span class="p">];</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mkCljCli <span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  <span class="ss">jdkDrv</span> <span class="o">=</span> self<span class="o">.</span>packages<span class="o">.</span><span class="s2">&quot;</span><span class="si">${</span>system<span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span>jdk-tuto<span class="p">;</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  <span class="ss">java-opts</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;-Dclojure.compiler.direct-linking=true&quot;</span> <span class="p">];</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  <span class="ss">extra-args</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;--foo&quot;</span> <span class="s2">&quot;bar&quot;</span> <span class="p">];</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="bbtasksfromfile">bbTasksFromFile</h3>
 <p>Reads a Clojure file, for each function generates a
@@ -1350,15 +1365,15 @@ Clojure file) or the following attributes:</p>
 <p><strong>file</strong>: Path to the Clojure file</p>
 <p><strong>bb</strong>: Babashka derivation (Default: <code>nixpkgs.babashka</code>)</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>devShells<span class="o">.</span><span class="ss">default</span> <span class="o">=</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  pkgs<span class="o">.</span>devshell<span class="o">.</span>mkShell <span class="p">{</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="ss">commands</span> <span class="o">=</span> pkgs<span class="o">.</span>bbTasksFromFile <span class="l">./tasks.clj</span><span class="p">;</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="c1"># or</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="ss">commands</span> <span class="o">=</span> pkgs<span class="o">.</span>bbTasksFromFile <span class="p">{</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>      <span class="ss">file</span> <span class="o">=</span> <span class="l">./tasks.clj</span><span class="p">;</span>
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>      <span class="ss">bb</span> <span class="o">=</span> pkgs<span class="o">.</span>mkBabashka <span class="p">{</span> <span class="ss">withFeatures</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;jdbc&quot;</span> <span class="s2">&quot;sqlite&quot;</span> <span class="p">];</span> <span class="p">};</span>
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="p">};</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  <span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>devShells<span class="o">.</span><span class="ss">default</span> <span class="o">=</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  pkgs<span class="o">.</span>devshell<span class="o">.</span>mkShell <span class="p">{</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="ss">commands</span> <span class="o">=</span> pkgs<span class="o">.</span>bbTasksFromFile <span class="l">./tasks.clj</span><span class="p">;</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="c1"># or</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="ss">commands</span> <span class="o">=</span> pkgs<span class="o">.</span>bbTasksFromFile <span class="p">{</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>      <span class="ss">file</span> <span class="o">=</span> <span class="l">./tasks.clj</span><span class="p">;</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>      <span class="ss">bb</span> <span class="o">=</span> pkgs<span class="o">.</span>mkBabashka <span class="p">{</span> <span class="ss">withFeatures</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;jdbc&quot;</span> <span class="s2">&quot;sqlite&quot;</span> <span class="p">];</span> <span class="p">};</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>    <span class="p">};</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  <span class="p">}</span>
 </code></pre></div>
 <h3 id="mk-deps-cache">mk-deps-cache</h3>
 <p>Generate maven + gitlib cache from a lock file. This is a lower level helper,
@@ -1366,9 +1381,9 @@ usually you want to use <code>mkCljBin</code> or <code>mkCljLib</code> and defin
 command with the <code>buildCommand</code> argument.</p>
 <p><strong>lockfile</strong>: deps-lock.json file</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>mk-deps-cache <span class="p">{</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  <span class="ss">lockfile</span> <span class="o">=</span> <span class="l">./deps-lock.json</span><span class="p">;</span>
-<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mk-deps-cache <span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>  <span class="ss">lockfile</span> <span class="o">=</span> <span class="l">./deps-lock.json</span><span class="p">;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">}</span>
 </code></pre></div>
 
 
