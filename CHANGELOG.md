@@ -10,6 +10,9 @@
 - `mkCljsApp`: added `npmRoot` and `nodeModules` arguments for building the
   project's `node_modules` via `pkgs.importNpmLock.buildNodeModules`; the
   resolved tree is exposed on `passthru.node-modules` for devshell reuse
+- `mkCljsApp`: added `jdk` argument to pin a specific JDK for the build.
+  The built-in `clojure` is overridden to run on the requested JDK and the
+  JDK is added to `nativeBuildInputs`
 
 ## 0.4.0 (2024-11-20)
 
