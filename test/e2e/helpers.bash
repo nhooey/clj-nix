@@ -10,6 +10,14 @@ container_runtime() {
   fi
 }
 
+# Defensive docker → podman shim. Activates when a test (or third-party
+# script) calls `docker` directly and only podman is on PATH (e.g. on
+# Garnix Linux runners). No-op if docker is already available.
+if ! command -v docker &> /dev/null && command -v podman &> /dev/null; then
+  docker() { podman "$@"; }
+  export -f docker
+fi
+
 # Skip container tests on macOS unless remote builders are configured
 skip_if_darwin_without_remote_builders() {
   if [[ "$OSTYPE" == "darwin"* ]] && ! nix show-config | grep -q "builders.*ssh"; then
