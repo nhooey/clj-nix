@@ -8,7 +8,8 @@
     [cljnix.build :as build]
     [cljnix.build.cljs :as cljs]
     [cljnix.check :as check]
-    [clojure.data.json :as json]))
+    [clojure.data.json :as json]
+    [clojure.string]))
 
 ;; Command registry - extensible for additional build types
 (def ^:private command-handlers
@@ -70,13 +71,35 @@
   [args]
   (check-main-class args))
 
+(defn- parse-aliases
+  "Parse the trailing aliases argument.
+  Accepts nil, \"\" (no aliases), or a comma-separated list like \"shadow-cljs,dev\"."
+  [s]
+  (if (or (nil? s) (= "" s))
+    []
+    (->> (clojure.string/split s #",")
+         (remove clojure.string/blank?)
+         (vec))))
+
 (defn- handle-cljs-compile
-  "Handler for cljs-compile command (ClojureScript compilation)."
+  "Handler for cljs-compile command (ClojureScript compilation).
+
+  Positional args:
+    <lib-name> <version> <build-id> <target> [aliases]
+
+  The optional trailing <aliases> arg is a comma-separated list of
+  deps.edn alias names (e.g. \"shadow-cljs,dev\") used to construct the
+  `-M:alias1:alias2` flag for the default shadow-cljs command."
   [args]
-  (-> (zipmap [:lib-name :version :build-id :target] args)
-      (update :build-id keyword)
-      (update :target keyword)
-      (cljs/compile-cljs)))
+  (let [[lib-name version build-id target aliases-str] args]
+    (-> {:lib-name lib-name
+         :version version
+         :build-id build-id
+         :target target
+         :aliases (parse-aliases aliases-str)}
+        (update :build-id keyword)
+        (update :target keyword)
+        (cljs/compile-cljs))))
 
 (defn- handle-cljs-package
   "Handler for cljs-package command (ClojureScript packaging)."
@@ -108,8 +131,9 @@
     check-main <lib-name> <version> <main-ns> - Check if main-ns has :gen-class
 
   ClojureScript Commands:
-    cljs-compile <lib-name> <version> <build-id> <target> - Compile ClojureScript
-    cljs-package <lib-name> <version> <build-id> <target> - Package ClojureScript output
+    cljs-compile <lib-name> <version> <build-id> <target> [aliases] - Compile ClojureScript
+                                                                      (aliases is a comma-separated list, e.g. shadow-cljs,dev)
+    cljs-package <lib-name> <version> <build-id> <target>           - Package ClojureScript output
 
   Utility Commands:
     patch-git-sha <project-dir>  - Expand partial git SHAs to full SHAs

@@ -20,6 +20,20 @@ NPM / node_modules:
                 Example: nodeModules = myCustomNodeModules;
   The resolved tree is exposed via passthru.node-modules so callers can
   reuse it for devshell watch-mode commands.
+
+Aliases:
+  aliases       List of deps.edn alias names (strings) activated for the
+                default build invocation. When non-empty, the default
+                command becomes `clojure -M:a1:a2 <build-cmd>` — the alias
+                is expected to provide `:main-opts ["-m" "shadow.cljs.devtools.cli"]`
+                (the standard shadow-cljs idiom). When empty, the command
+                is `clojure -M -m shadow.cljs.devtools.cli <build-cmd>`,
+                assuming shadow-cljs is in top-level :deps.
+                Example alias entry matching the expected shape:
+                  :shadow-cljs
+                    {:extra-deps {thheller/shadow-cljs {:mvn/version "..."}}
+                     :main-opts  ["-m" "shadow.cljs.devtools.cli"]}
+                Then pass: aliases = [ "shadow-cljs" ];
 */
 
 { stdenv
@@ -47,6 +61,7 @@ NPM / node_modules:
 , nodejs-package ? nodejs
 , npmRoot ? null
 , nodeModules ? null
+, aliases ? [ ]
 , ...
 }@attrs:
 
@@ -64,6 +79,7 @@ let
     "nodejs-package"
     "npmRoot"
     "nodeModules"
+    "aliases"
     "nativeBuildInputs"
   ];
 
@@ -131,8 +147,9 @@ stdenv.mkDerivation ({
     (
       if builtins.isNull buildCommand then
         ''
-          # Default ClojureScript build using clj-builder
-          ${clj-builder}/bin/clj-builder cljs-compile "${fullId}" "${version}" "${buildId}" "${buildTarget}"
+          # Default ClojureScript build using clj-builder.
+          # Trailing arg is a comma-separated list of deps.edn aliases to activate.
+          ${clj-builder}/bin/clj-builder cljs-compile "${fullId}" "${version}" "${buildId}" "${buildTarget}" "${lib.concatStringsSep "," aliases}"
         ''
       else
         ''
