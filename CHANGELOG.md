@@ -13,6 +13,11 @@
 - `mkCljsApp`: added `jdk` argument to pin a specific JDK for the build.
   The built-in `clojure` is overridden to run on the requested JDK and the
   JDK is added to `nativeBuildInputs`
+- `mkCljsApp`: added `installPaths` and `installCommand` arguments for
+  configuring the install-phase layout (e.g. `installPaths = [ "resources/public" ]`
+  for shadow-cljs projects with `:output-dir "resources/public/js"`).
+  `installPaths` defaults to `[ "public" ]`, matching the common shadow-cljs
+  browser layout; each entry's directory contents are copied into `$out`
 
 ## 0.4.0 (2024-11-20)
 

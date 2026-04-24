@@ -42,6 +42,19 @@ JDK:
                 requested version. When null, the ambient `clojure` (with
                 its default JDK) is used.
                 Example: jdk = pkgs.jdk21;
+
+Install layout:
+  installPaths     List of relative source directories whose CONTENTS are
+                   copied into $out during installPhase. Default:
+                   [ "public" ], which matches the common shadow-cljs
+                   browser layout of :output-dir "public/js" served from
+                   public/. For other layouts, override — e.g.
+                   [ "resources/public" ] for :output-dir
+                   "resources/public/js".
+  installCommand   Shell snippet evaluated during installPhase with $out
+                   in scope. Runs after installPaths. Use for layouts
+                   that don't fit the directory-contents pattern.
+                   Example: installCommand = "cp dist/index.html $out/";
 */
 
 { stdenv
@@ -71,6 +84,8 @@ JDK:
 , npmRoot ? null
 , nodeModules ? null
 , jdk ? null
+, installPaths ? [ "public" ]
+, installCommand ? null
 , ...
 }@attrs:
 
@@ -90,6 +105,8 @@ let
     "npmRoot"
     "nodeModules"
     "jdk"
+    "installPaths"
+    "installCommand"
     "nativeBuildInputs"
   ];
 
@@ -183,21 +200,18 @@ stdenv.mkDerivation ({
 
       mkdir -p $out
 
-      # Find and copy compiled output
-      if [ -d "target/cljs/${buildId}" ]; then
-        cp -r target/cljs/${buildId}/* $out/
-      elif [ -d "public" ]; then
-        # shadow-cljs default output for browser builds
-        cp -r public/* $out/
-      else
-        echo "Warning: No compiled output found in expected locations"
-        # Copy any .js files found in target
-        find target -name "*.js" -exec cp {} $out/ \;
-      fi
+      ${lib.concatMapStringsSep "\n" (p: ''
+        if [ -d "${p}" ]; then
+          cp -r ${p}/. $out/
+        fi
+      '') installPaths}
+
+      ${lib.optionalString (installCommand != null) installCommand}
 
       # For Node.js builds, create executable wrapper
       ${if buildTarget == "node" then ''
         if [ -f "$out/main.js" ]; then
+          mkdir -p $out/bin
           cat > $out/bin/${artifactId} <<EOF
       #!${nodejs-package}/bin/node
       require('$out/main.js');
