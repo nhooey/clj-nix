@@ -1185,9 +1185,12 @@ Node.js and browser targets using shadow-cljs. Takes the following attributes
 <p><strong>projectSrc</strong>: Project source code.</p>
 </li>
 <li>
-<p><strong>name</strong>: Derivation and ClojureScript project name. It's recommended to use a
-  namespaced name. If not, a namespace is added automatically. E.g. <code>foo</code> will
-  be transformed to <code>foo/foo</code></p>
+<p><strong>name</strong>: Derivation name. Plain derivation name only (no <code>/</code>).</p>
+</li>
+<li>
+<p><strong>libCoordinate</strong>: Maven-style <code>org/artifact</code> coordinate passed through to
+  <code>clj-builder cljs-compile</code>. When <code>null</code>, defaults to <code>"${name}/${name}"</code>.
+  (Default: <code>null</code>)</p>
 </li>
 <li>
 <p><strong>version</strong>: Derivation and ClojureScript project version. (Default: <code>DEV</code>)</p>
@@ -1263,30 +1266,33 @@ for configuration details.</p>
 <p><strong>Browser target example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/my-spa&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  <span class="ss">buildTarget</span> <span class="o">=</span> <span class="s2">&quot;browser&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  <span class="ss">buildId</span> <span class="o">=</span> <span class="s2">&quot;app&quot;</span><span class="p">;</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">}</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;my-spa&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/my-spa&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  <span class="ss">buildTarget</span> <span class="o">=</span> <span class="s2">&quot;browser&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>  <span class="ss">buildId</span> <span class="o">=</span> <span class="s2">&quot;app&quot;</span><span class="p">;</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Node.js target example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/my-node-app&quot;</span><span class="p">;</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  <span class="ss">buildTarget</span> <span class="o">=</span> <span class="s2">&quot;node&quot;</span><span class="p">;</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  <span class="ss">buildId</span> <span class="o">=</span> <span class="s2">&quot;server&quot;</span><span class="p">;</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  <span class="ss">nodejs-package</span> <span class="o">=</span> pkgs<span class="o">.</span>nodejs_20<span class="p">;</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">}</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;my-node-app&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/my-node-app&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  <span class="ss">buildTarget</span> <span class="o">=</span> <span class="s2">&quot;node&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  <span class="ss">buildId</span> <span class="o">=</span> <span class="s2">&quot;server&quot;</span><span class="p">;</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>  <span class="ss">nodejs-package</span> <span class="o">=</span> pkgs<span class="o">.</span>nodejs_20<span class="p">;</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Custom build command example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/custom-build&quot;</span><span class="p">;</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  <span class="ss">buildCommand</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s s-Multiline">    npx shadow-cljs release app --config-merge &#39;{:compiler-options {:optimizations :advanced}}&#39;</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">}</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;custom-build&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/custom-build&quot;</span><span class="p">;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  <span class="ss">buildCommand</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s s-Multiline">    npx shadow-cljs release app --config-merge &#39;{:compiler-options {:optimizations :advanced}}&#39;</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong><code>shadow-cljs</code> under a <code>deps.edn</code> alias example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Given a deps.edn like:</span>
@@ -1297,38 +1303,42 @@ for configuration details.</p>
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1">#               :main-opts  [&quot;-m&quot; &quot;shadow.cljs.devtools.cli&quot;]}}}</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-alias&quot;</span><span class="p">;</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>  <span class="ss">aliases</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;shadow-cljs&quot;</span> <span class="p">];</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">}</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;with-alias&quot;</span><span class="p">;</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-alias&quot;</span><span class="p">;</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>  <span class="ss">aliases</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;shadow-cljs&quot;</span> <span class="p">];</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>npm / <code>node_modules</code> example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-npm&quot;</span><span class="p">;</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>  <span class="c1"># Project root contains package.json and package-lock.json.</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  <span class="ss">npmRoot</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;with-npm&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-npm&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>  <span class="c1"># Project root contains package.json and package-lock.json.</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>  <span class="ss">npmRoot</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Pinned JDK example</strong>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-jdk&quot;</span><span class="p">;</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  <span class="ss">jdk</span> <span class="o">=</span> pkgs<span class="o">.</span>jdk21<span class="p">;</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">}</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;with-jdk&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/with-jdk&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>  <span class="ss">jdk</span> <span class="o">=</span> pkgs<span class="o">.</span>jdk21<span class="p">;</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">}</span>
 </code></pre></div>
 <p><strong>Custom install layout example</strong> (shadow-cljs writes to <code>resources/public/js</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mkCljsApp <span class="p">{</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/custom-install&quot;</span><span class="p">;</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  <span class="ss">installPaths</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;resources/public&quot;</span> <span class="p">];</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  <span class="c1"># Drop a marker file after the copy runs.</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>  <span class="ss">installCommand</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s s-Multiline">    echo &quot;built at $(date -u +%FT%TZ)&quot; &gt; &quot;$out/BUILT_AT&quot;</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">}</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;custom-install&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  <span class="ss">libCoordinate</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/custom-install&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  <span class="ss">version</span> <span class="o">=</span> <span class="s2">&quot;1.0.0&quot;</span><span class="p">;</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  <span class="ss">installPaths</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;resources/public&quot;</span> <span class="p">];</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>  <span class="c1"># Drop a marker file after the copy runs.</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>  <span class="ss">installCommand</span> <span class="o">=</span> <span class="s s-Multiline">&#39;&#39;</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="s s-Multiline">    echo &quot;built at $(date -u +%FT%TZ)&quot; &gt; &quot;$out/BUILT_AT&quot;</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="s s-Multiline">  &#39;&#39;</span><span class="p">;</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="mkbabashka">mkBabashka</h3>
 <p>Builds <a href="https://github.com/babashka/babashka/">Babashka</a> with the specified
