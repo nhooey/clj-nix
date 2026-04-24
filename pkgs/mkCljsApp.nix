@@ -34,6 +34,14 @@ Aliases:
                     {:extra-deps {thheller/shadow-cljs {:mvn/version "..."}}
                      :main-opts  ["-m" "shadow.cljs.devtools.cli"]}
                 Then pass: aliases = [ "shadow-cljs" ];
+
+JDK:
+  jdk           Optional JDK package. When non-null, the `clojure` used for
+                the build is overridden to run on this JDK, and the JDK is
+                added to nativeBuildInputs so `java` is available at the
+                requested version. When null, the ambient `clojure` (with
+                its default JDK) is used.
+                Example: jdk = pkgs.jdk21;
 */
 
 { stdenv
@@ -62,6 +70,7 @@ Aliases:
 , npmRoot ? null
 , nodeModules ? null
 , aliases ? [ ]
+, jdk ? null
 , ...
 }@attrs:
 
@@ -80,8 +89,13 @@ let
     "npmRoot"
     "nodeModules"
     "aliases"
+    "jdk"
     "nativeBuildInputs"
   ];
+
+  # Optionally override clojure's JDK so the build runs on a specific JVM.
+  effectiveClojure =
+    if jdk != null then clojure.override { inherit jdk; } else clojure;
 
   # Resolve node_modules from either a caller-supplied derivation or an
   # npmRoot containing package.json + package-lock.json.
@@ -113,9 +127,10 @@ stdenv.mkDerivation ({
     attrs.nativeBuildInputs or [ ]
       ++
       [
-        clojure
+        effectiveClojure
         nodejs-package
-      ];
+      ]
+      ++ lib.optional (jdk != null) jdk;
 
   passthru = {
     inherit deps-cache fullId artifactId buildTarget buildId;
