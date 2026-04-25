@@ -17,46 +17,42 @@
   outputs = { self, nixpkgs, clj-nix }:
 
     let
-      eachDefaultSystem = f: nixpkgs.lib.genAttrs
-        [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ]
-        f;
-    in
-    eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        cljpkgs = clj-nix.legacyPackages."${system}";
+      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
 
-        # Detect if we're on macOS and need to use Linux packages for containers
-        isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-        linuxSystem = if pkgs.stdenv.hostPlatform.isAarch64 then "aarch64-linux" else "x86_64-linux";
+      perSystem = system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          cljpkgs = clj-nix.legacyPackages."${system}";
 
-        # Use native Linux packages for containers (requires remote builders on macOS)
-        containerPkgs = if isDarwin then nixpkgs.legacyPackages.${linuxSystem} else pkgs;
-        containerCljpkgs = if isDarwin then clj-nix.legacyPackages.${linuxSystem} else cljpkgs;
+          # Detect if we're on macOS and need to use Linux packages for containers
+          isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
+          linuxSystem = if pkgs.stdenv.hostPlatform.isAarch64 then "aarch64-linux" else "x86_64-linux";
 
-        # Common function to build a Clojure binary (reusable for containers)
-        mkCljBinFor = pkgsSet: cljpkgsSet:
-          cljpkgsSet.mkCljBin {
-            projectSrc = ./.;
-            name = "me.lafuente/cljdemo";
-            main-ns = "hello.core";
-            jdkRunner = pkgsSet.jdk17_headless;
+          # Use native Linux packages for containers (requires remote builders on macOS)
+          containerPkgs = if isDarwin then nixpkgs.legacyPackages.${linuxSystem} else pkgs;
+          containerCljpkgs = if isDarwin then clj-nix.legacyPackages.${linuxSystem} else cljpkgs;
+
+          # Common function to build a Clojure binary (reusable for containers)
+          mkCljBinFor = pkgsSet: cljpkgsSet:
+            cljpkgsSet.mkCljBin {
+              projectSrc = ./.;
+              name = "me.lafuente/cljdemo";
+              main-ns = "hello.core";
+              jdkRunner = pkgsSet.jdk17_headless;
+            };
+
+          # Container-specific builds (Linux on macOS, native on Linux)
+          containerCljBin = mkCljBinFor containerPkgs containerCljpkgs;
+          containerCustomJdk = containerCljpkgs.customJdk {
+            cljDrv = containerCljBin;
+            locales = "en,es";
           };
-
-        # Container-specific builds (Linux on macOS, native on Linux)
-        containerCljBin = mkCljBinFor containerPkgs containerCljpkgs;
-        containerCustomJdk = containerCljpkgs.customJdk {
-          cljDrv = containerCljBin;
-          locales = "en,es";
-        };
-        containerGraalBin = containerCljpkgs.mkGraalBin {
-          cljDrv = containerCljBin;
-        };
-      in
-
-      {
-        packages = {
-
+          containerGraalBin = containerCljpkgs.mkGraalBin {
+            cljDrv = containerCljBin;
+          };
+        in
+        {
           mkCljBin-test = mkCljBinFor pkgs cljpkgs;
 
           customJdk-test = cljpkgs.customJdk {
@@ -98,9 +94,10 @@
 
           babashka-with-features-test =
             clj-nix.packages.${system}.babashka-with-features;
-
-
         };
-      });
+    in
+    {
+      packages = forAllSystems perSystem;
+    };
 
 }
