@@ -66,7 +66,10 @@ teardown_file() {
     # exits, so it doesn't need networking. Garnix's runner sandbox
     # blocks /dev/net/tun, which both pasta and slirp4netns require
     # for default rootless networking.
-    run -0 "$(container_runtime)" run --rm --network=none jvm-container-test:latest
+    # --cgroups=disabled: /sys/fs/cgroup is mounted read-only in
+    # Garnix's sandbox, so podman can't create the conmon cgroup. We
+    # don't care about cgroup-based resource limits here.
+    run -0 "$(container_runtime)" run --rm --network=none --cgroups=disabled jvm-container-test:latest
     assert_output_equals "Hello from CLOJURE!!!"
 }
 
@@ -75,8 +78,8 @@ teardown_file() {
     skip_if_darwin_without_remote_builders
     nix_build_with_result .#graal-container-test
     $(container_runtime) load -i result
-    # See note on jvm-container-test above re: --network=none.
-    run -0 "$(container_runtime)" run --rm --network=none graal-container-test:latest
+    # See note on jvm-container-test above re: --network=none / --cgroups=disabled.
+    run -0 "$(container_runtime)" run --rm --network=none --cgroups=disabled graal-container-test:latest
     assert_output_equals "Hello from CLOJURE!!!"
 }
 

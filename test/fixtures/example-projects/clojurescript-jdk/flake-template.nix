@@ -2,24 +2,22 @@
   description = "ClojureScript example project with a pinned JDK";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    cljnix = {
-      url = "{{cljnixUrl}}";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    cljnix.url = "{{cljnixUrl}}";
+    nixpkgs.follows = "cljnix/nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, cljnix }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ cljnix.overlays.default ];
-        };
-      in
-      {
-        packages = {
+  outputs = { self, nixpkgs, cljnix }:
+    let
+      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+      perSystem = system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ cljnix.overlays.default ];
+          };
+        in
+        {
           default = pkgs.mkCljsApp {
             projectSrc = ./.;
             name = "app";
@@ -34,6 +32,8 @@
             '';
           };
         };
-      }
-    );
+    in
+    {
+      packages = forAllSystems perSystem;
+    };
 }
