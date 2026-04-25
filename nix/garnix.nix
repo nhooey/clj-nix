@@ -46,6 +46,13 @@ let
     export HOME=$(mktemp -d)
     export GARNIX_WORKDIR="''${GARNIX_WORKDIR:-$PWD}"
     cd "$GARNIX_WORKDIR"
+
+    # Garnix's action-side nix config doesn't enable the experimental
+    # features the bats tests need — they use `nix run`, `nix build`,
+    # `nix flake new`, etc. Layer them on via NIX_CONFIG so every
+    # nix invocation in this action picks them up.
+    export NIX_CONFIG="experimental-features = nix-command flakes
+    accept-flake-config = true"
   '';
 
   # ---------------------------------------------------------------------
@@ -101,10 +108,17 @@ let
   # scripts work outside `nix develop` — Garnix invokes them as plain
   # shell commands with the repo at $PWD.
   # ---------------------------------------------------------------------
+  # NB: `pkgs.fake-git` is intentionally NOT on PATH here. It's a
+  # babashka-backed wrapper named `git` that intercepts git commands
+  # for the sandboxed deps-lock workflow. Putting it on the action's
+  # PATH would shadow the real git binary and break anything that
+  # genuinely needs git (the kaocha :network-integration suite clones
+  # tools.build.git and reads its tags; the bats tests run `git init`
+  # and `git add`). The deps-lock derivation that does need fake-git
+  # gets it via its own nativeBuildInputs closure.
   cljTools = [
     pkgs.clojure
     pkgs.jdk
-    pkgs.fake-git
     pkgs.git
     pkgs.coreutils
   ];
@@ -113,7 +127,6 @@ let
     pkgs.bats
     pkgs.nix
     pkgs.git
-    pkgs.fake-git
     pkgs.clojure
     pkgs.jdk
     pkgs.babashka
