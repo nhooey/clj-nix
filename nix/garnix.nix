@@ -152,14 +152,14 @@ let
     pkgs.coreutils
   ];
 
-  e2eTools = [
+  # Tools every E2E action needs.
+  e2eToolsBase = [
     pkgs.bats
     pkgs.nix
     pkgs.git
     pkgs.clojure
     pkgs.jdk
     pkgs.babashka
-    pkgs.podman
     pkgs.envsubst
     pkgs.mustache-go
     pkgs.diffutils
@@ -168,15 +168,17 @@ let
     pkgs.gnugrep
     pkgs.gnused
     pkgs.findutils
-  ]
-  # Linux-only podman requirements:
+  ];
+
+  # Extra tools only the container-using action needs. Linux-only:
   #   shadow:       newuidmap / newgidmap for rootless podman.
   #   slirp4netns:  pasta needs /dev/net/tun, which Garnix's runner
   #                 doesn't expose. Use slirp4netns instead.
-  ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
-    pkgs.shadow
-    pkgs.slirp4netns
-  ];
+  e2eToolsPodman = [ pkgs.podman ]
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+      pkgs.shadow
+      pkgs.slirp4netns
+    ];
 
   setupPath = tools: ''
     export PATH="${lib.makeBinPath tools}:$PATH"
@@ -195,51 +197,109 @@ let
   '';
 
   # ---------------------------------------------------------------------
-  # E2E apps — one per .bats file. Discovered with builtins.readDir
-  # so adding a new test file automatically creates a new Garnix
-  # Action with no other code changes (then re-run the garnix.yaml
-  # generator).
+  # E2E apps — grouped, one Garnix Action per group.
+  #
+  # Earlier iteration was one-action-per-bats-file. That paid runner
+  # provisioning + flake-eval + JVM startup five separate times for the
+  # tiny clojurescript variants, and provisioned podman + slirp4netns +
+  # shadow for seven actions that never invoke a container. Groups
+  # below cluster files by setup cost and only attach the podman
+  # toolchain where it's actually used.
+  #
+  # Adding a new .bats file? Append its filename to one of the groups
+  # below. The eval-time `assert` ensures every file under test/e2e/
+  # is assigned to exactly one group.
   # ---------------------------------------------------------------------
   e2eDir = ../test/e2e;
 
-  batsFiles = lib.filter (n: lib.hasSuffix ".bats" n)
+  allBatsFiles = lib.filter (n: lib.hasSuffix ".bats" n)
     (lib.attrNames (builtins.readDir e2eDir));
 
-  mkE2eName = batsFile: "tests-e2e-${lib.removeSuffix ".bats" batsFile}";
+  e2eGroups = [
+    {
+      name = "clojurescript";
+      files = [
+        "clojurescript.bats"
+        "clojurescript-aliases.bats"
+        "clojurescript-install-paths.bats"
+        "clojurescript-jdk.bats"
+        "clojurescript-npm.bats"
+      ];
+      needsPodman = false;
+    }
+    {
+      name = "jvm-projects";
+      files = [
+        "leiningen.bats"
+        "packages.bats"
+      ];
+      needsPodman = false;
+    }
+    {
+      # new-project's teardown_file calls `container_runtime rmi`, and
+      # several of its tests build + load podman images (currently
+      # skipped on Garnix for sandbox reasons, but the file expects
+      # podman on PATH). It's the only group that needs setupPodman.
+      name = "new-project";
+      files = [ "new-project.bats" ];
+      needsPodman = true;
+    }
+  ];
 
-  mkE2eScript = batsFile:
+  groupedFiles = lib.concatMap (g: g.files) e2eGroups;
+  ungroupedFiles = lib.subtractLists groupedFiles allBatsFiles;
+
+  mkE2eName = group: "tests-e2e-${group.name}";
+
+  mkE2eScript = group:
     let
-      name = mkE2eName batsFile;
+      tools = e2eToolsBase
+        ++ lib.optionals group.needsPodman e2eToolsPodman;
+      podmanSetup = lib.optionalString group.needsPodman setupPodman;
+      runEachFile = lib.concatMapStringsSep "\n" (file: ''
+        echo ""
+        echo "------------------------------------------------------"
+        echo "--- bats: test/e2e/${file}"
+        echo "------------------------------------------------------"
+        bats --timing test/e2e/${file} || failed=$((failed + 1))
+      '') group.files;
     in
-    withDiagnostics name ''
+    withDiagnostics (mkE2eName group) ''
       ${sandboxChecksDep}
       ${prebuiltArtifactsDep}
       ${setupEnv}
-      ${setupPath e2eTools}
-      ${setupPodman}
+      ${setupPath tools}
+      ${podmanSetup}
 
-      echo "Running E2E test: ${batsFile}"
-      bats --timing test/e2e/${batsFile}
+      failed=0
+      ${runEachFile}
+      if [ "$failed" -gt 0 ]; then
+        echo ""
+        echo "$failed bats file(s) reported failures in this action."
+        exit 1
+      fi
     '';
 
   e2eApps = lib.listToAttrs (map
-    (f: {
-      name = mkE2eName f;
+    (g: {
+      name = mkE2eName g;
       value = {
         type = "app";
-        program = toString (mkE2eScript f);
+        program = toString (mkE2eScript g);
       };
     })
-    batsFiles);
+    e2eGroups);
 
   e2eScripts = lib.listToAttrs (map
-    (f: {
-      name = mkE2eName f;
-      value = mkE2eScript f;
+    (g: {
+      name = mkE2eName g;
+      value = mkE2eScript g;
     })
-    batsFiles);
+    e2eGroups);
 
 in
+assert lib.assertMsg (ungroupedFiles == [])
+  "garnix.nix: bats files in test/e2e/ not assigned to any e2eGroup: ${toString ungroupedFiles}";
 {
   apps = {
     tests-network = {

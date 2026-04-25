@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Regenerate garnix.yaml from the current bats files in test/e2e/.
+# Regenerate garnix.yaml's `actions:` section from the action set
+# defined in nix/garnix.nix.
 #
-# Run this whenever you add or remove an .bats file. The action set in
-# nix/garnix.nix is derived dynamically via builtins.readDir, but
-# garnix.yaml is committed as a static file so it can be reviewed in
-# PRs without evaluating Nix.
+# Source of truth: the e2eGroups list (and tests-network) in
+# nix/garnix.nix, exposed on the flake as `garnixActionNames`. This
+# script just translates that list into garnix.yaml entries.
+#
+# Run after editing e2eGroups (e.g. adding a new bats file).
 
 set -euo pipefail
 
@@ -16,21 +18,21 @@ HEADER_END_PATTERN='^actions:'
 # Preserve the file header (everything up to and including "actions:").
 header_lines=$(grep -n "$HEADER_END_PATTERN" "$OUT" | head -1 | cut -d: -f1)
 head -n "$header_lines" "$OUT" > "$OUT.tmp"
+echo "" >> "$OUT.tmp"
 
-# tests-network is fixed.
-cat >> "$OUT.tmp" <<'EOF'
-  - on: push
-    run: tests-network
-    withRepoContents: true
+# Pull action names from the flake. Single source of truth.
+mapfile -t actions < <(nix eval --json .#garnixActionNames.x86_64-linux | jq -r '.[]')
 
-EOF
+if [ "${#actions[@]}" -eq 0 ]; then
+  echo "Refusing to write empty action list — flake eval returned nothing." >&2
+  rm -f "$OUT.tmp"
+  exit 1
+fi
 
-# One action per bats file (sorted for deterministic output).
-for f in $(find test/e2e -maxdepth 1 -name '*.bats' | sort); do
-  base=$(basename "$f" .bats)
+for name in "${actions[@]}"; do
   cat >> "$OUT.tmp" <<EOF
   - on: push
-    run: tests-e2e-${base}
+    run: ${name}
     withRepoContents: true
 
 EOF
@@ -40,4 +42,4 @@ done
 sed -i.bak -e '$d' "$OUT.tmp" && rm -f "$OUT.tmp.bak"
 
 mv "$OUT.tmp" "$OUT"
-echo "Regenerated $OUT"
+echo "Regenerated $OUT with ${#actions[@]} action(s)."

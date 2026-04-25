@@ -214,6 +214,11 @@
 
       apps = eachSystem ({ garnix, ... }: garnix.apps);
 
+      # Internal: Garnix action names per system, used by
+      # scripts/regen-garnix-yaml.sh so nix/garnix.nix is the single
+      # source of truth for the action set.
+      garnixActionNames = eachSystem ({ garnix, ... }: garnix.actionNames);
+
       devShells = eachSystem ({ pkgs, garnix, ... }: {
         default =
           pkgs.devshell.mkShell {
