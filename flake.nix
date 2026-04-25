@@ -166,6 +166,14 @@
           babashka = pkgs.mkBabashka { };
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
+          # Variant prebuilt for the bats babashka-with-features-test
+          # case, so the Garnix action runner can pull it from cache
+          # instead of recompiling via GraalVM in a memory-constrained
+          # sandbox.
+          babashka-with-features = pkgs.mkBabashka {
+            withFeatures = [ "jdbc" "sqlite" ];
+          };
+
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
 
           # Test runners using clj-nix with locked dependencies

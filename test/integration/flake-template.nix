@@ -78,11 +78,19 @@
             };
           };
 
-          babashka-test = cljpkgs.mkBabashka { };
+          # Reference clj-nix's prebuilt babashka derivations directly
+          # rather than re-invoking mkBabashka here. The local function
+          # call evaluates against a slightly different closure than
+          # clj-nix's own packages.<system>.babashka and produces a
+          # different store hash, causing the Garnix action runner to
+          # miss the cache and try to recompile babashka via GraalVM
+          # native-image (which OOMs in the runner's ~4.5GB sandbox).
+          # Pointing at clj-nix.packages.<system>.* guarantees a hash
+          # match against what Garnix already prebuilt.
+          babashka-test = clj-nix.packages.${system}.babashka;
 
-          babashka-with-features-test = cljpkgs.mkBabashka {
-            withFeatures = [ "jdbc" "sqlite" ];
-          };
+          babashka-with-features-test =
+            clj-nix.packages.${system}.babashka-with-features;
 
 
         };
