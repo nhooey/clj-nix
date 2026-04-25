@@ -87,6 +87,16 @@ let
     # builds may need the file at HOME/.config/containers/policy.json.
     mkdir -p "$HOME/.config/containers"
     cp "$CONTAINERS_POLICY" "$HOME/.config/containers/policy.json"
+
+    # Default rootless networking is `pasta`, which needs
+    # /dev/net/tun. The Garnix runner sandbox doesn't expose
+    # /dev/net/tun, so `podman run` fails immediately. Force
+    # slirp4netns instead — it's pure userspace and works without
+    # /dev/net/tun.
+    cat > "$HOME/.config/containers/containers.conf" <<EOF
+    [network]
+    default_rootless_network_cmd = "slirp4netns"
+    EOF
   '';
 
   # ---------------------------------------------------------------------
@@ -159,8 +169,14 @@ let
     pkgs.gnused
     pkgs.findutils
   ]
-  # newuidmap / newgidmap for rootless podman — Linux only.
-  ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.shadow;
+  # Linux-only podman requirements:
+  #   shadow:       newuidmap / newgidmap for rootless podman.
+  #   slirp4netns:  pasta needs /dev/net/tun, which Garnix's runner
+  #                 doesn't expose. Use slirp4netns instead.
+  ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+    pkgs.shadow
+    pkgs.slirp4netns
+  ];
 
   setupPath = tools: ''
     export PATH="${lib.makeBinPath tools}:$PATH"
