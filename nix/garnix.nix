@@ -49,10 +49,15 @@ let
 
     # Garnix's action-side nix config doesn't enable the experimental
     # features the bats tests need — they use `nix run`, `nix build`,
-    # `nix flake new`, etc. Layer them on via NIX_CONFIG so every
-    # nix invocation in this action picks them up.
+    # `nix flake new`, etc. Layer them on via NIX_CONFIG, and add
+    # cache.garnix.io as an extra substituter so `nix build` inside
+    # the bats tests can pull prebuilt artifacts (notably the
+    # GraalVM-compiled babashka) instead of recompiling them in a
+    # memory-constrained runner.
     export NIX_CONFIG="experimental-features = nix-command flakes
-    accept-flake-config = true"
+    accept-flake-config = true
+    extra-substituters = https://cache.garnix.io
+    extra-trusted-public-keys = cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
   '';
 
   # ---------------------------------------------------------------------
