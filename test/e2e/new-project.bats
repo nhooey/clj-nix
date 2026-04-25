@@ -62,7 +62,11 @@ teardown_file() {
     skip_if_darwin_without_remote_builders
     nix_build_with_result .#jvm-container-test
     $(container_runtime) load -i result
-    run -0 "$(container_runtime)" run --rm jvm-container-test:latest
+    # --network=none: the test container only prints a string and
+    # exits, so it doesn't need networking. Garnix's runner sandbox
+    # blocks /dev/net/tun, which both pasta and slirp4netns require
+    # for default rootless networking.
+    run -0 "$(container_runtime)" run --rm --network=none jvm-container-test:latest
     assert_output_equals "Hello from CLOJURE!!!"
 }
 
@@ -71,7 +75,8 @@ teardown_file() {
     skip_if_darwin_without_remote_builders
     nix_build_with_result .#graal-container-test
     $(container_runtime) load -i result
-    run -0 "$(container_runtime)" run --rm graal-container-test:latest
+    # See note on jvm-container-test above re: --network=none.
+    run -0 "$(container_runtime)" run --rm --network=none graal-container-test:latest
     assert_output_equals "Hello from CLOJURE!!!"
 }
 
