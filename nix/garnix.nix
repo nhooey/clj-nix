@@ -73,6 +73,20 @@ let
     runroot = "$XDG_RUNTIME_DIR/containers"
     graphroot = "$XDG_RUNTIME_DIR/storage"
     EOF
+
+    # Podman needs a policy.json to decide which images are trusted
+    # to load. Without it, `podman load` fails with "no policy.json
+    # file found". For these tests we just built the images
+    # ourselves via Nix in this same action, so trusting everything
+    # is appropriate.
+    export CONTAINERS_POLICY=$(mktemp --suffix=-policy.json)
+    cat > "$CONTAINERS_POLICY" <<EOF
+    { "default": [ { "type": "insecureAcceptAnything" } ] }
+    EOF
+    # podman 4.x reads --signature-policy and CONTAINERS_POLICY; older
+    # builds may need the file at HOME/.config/containers/policy.json.
+    mkdir -p "$HOME/.config/containers"
+    cp "$CONTAINERS_POLICY" "$HOME/.config/containers/policy.json"
   '';
 
   # ---------------------------------------------------------------------
