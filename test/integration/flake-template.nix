@@ -5,16 +5,23 @@
   inputs = {
     clj-nix.url = "{{cljnixUrl}}";
     # Pin the dummy project to clj-nix's pinned nixpkgs so derivations
-    # like `babashka-test = mkBabashka {}` produce store hashes
-    # identical to clj-nix's own `babashka` package — Garnix's CI
-    # cache hits on them rather than triggering a fresh GraalVM
-    # native-image rebuild in a memory-constrained action runner.
+    # built here align with clj-nix's flake outputs.
     nixpkgs.follows = "clj-nix/nixpkgs";
-    flake-utils.url = "github:numtide/flake-utils";
+    # NB: no flake-utils input on purpose. `flake-utils.url =
+    # "github:numtide/flake-utils"` (no rev) makes `nix flake lock`
+    # call api.github.com to resolve HEAD, which gets rate-limited
+    # on Garnix's shared runner IP. Inline the only function we
+    # used (`eachDefaultSystem`) instead, eliminating the API
+    # dependency entirely.
   };
-  outputs = { self, nixpkgs, flake-utils, clj-nix }:
+  outputs = { self, nixpkgs, clj-nix }:
 
-    flake-utils.lib.eachDefaultSystem (system:
+    let
+      eachDefaultSystem = f: nixpkgs.lib.genAttrs
+        [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ]
+        f;
+    in
+    eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         cljpkgs = clj-nix.legacyPackages."${system}";
