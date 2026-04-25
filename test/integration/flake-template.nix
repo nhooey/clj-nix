@@ -3,12 +3,14 @@
   description = "A clj-nix flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    clj-nix.url = "{{cljnixUrl}}";
+    # Pin the dummy project to clj-nix's pinned nixpkgs so derivations
+    # like `babashka-test = mkBabashka {}` produce store hashes
+    # identical to clj-nix's own `babashka` package — Garnix's CI
+    # cache hits on them rather than triggering a fresh GraalVM
+    # native-image rebuild in a memory-constrained action runner.
+    nixpkgs.follows = "clj-nix/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
-    clj-nix = {
-      url = "{{cljnixUrl}}";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
   outputs = { self, nixpkgs, flake-utils, clj-nix }:
 
