@@ -23,18 +23,20 @@
         "x86_64-linux"
       ];
 
-      eachSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs
-          {
-            inherit system;
-            overlays = [
-              inputs.devshell.overlays.default
-              inputs.nix-fetcher-data.overlays.default
-              self.overlays.default
-            ];
-          };
-        inherit system;
-      });
+      eachSystem = f: nixpkgs.lib.genAttrs supportedSystems (system:
+        let
+          pkgs = import nixpkgs
+            {
+              inherit system;
+              overlays = [
+                inputs.devshell.overlays.default
+                inputs.nix-fetcher-data.overlays.default
+                self.overlays.default
+              ];
+            };
+          garnix = import ./nix/garnix.nix { inherit pkgs self system; };
+        in
+        f { inherit pkgs system garnix; });
 
       # Shared base packages for development and testing
       basePackages = pkgs: [
@@ -79,7 +81,7 @@
       };
     in
     {
-      packages = eachSystem ({ pkgs, system }:
+      packages = eachSystem ({ pkgs, system, ... }:
         let
           # Generate _remote.repositories files for Maven deps
           # Format: filename>repo-name=
@@ -164,6 +166,14 @@
           babashka = pkgs.mkBabashka { };
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
+          # Variant prebuilt for the bats babashka-with-features-test
+          # case, so the Garnix action runner can pull it from cache
+          # instead of recompiling via GraalVM in a memory-constrained
+          # sandbox.
+          babashka-with-features = pkgs.mkBabashka {
+            withFeatures = [ "jdbc" "sqlite" ];
+          };
+
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
 
           # Test runners using clj-nix with locked dependencies
@@ -179,7 +189,7 @@
 
         });
 
-      legacyPackages = eachSystem ({ pkgs, system }:
+      legacyPackages = eachSystem ({ pkgs, system, ... }:
         pkgs // {
           inherit (pkgs) clj-builder deps-lock mk-deps-cache
             fake-git
@@ -196,13 +206,20 @@
 
         });
 
-      checks = eachSystem ({ pkgs, system }:
+      checks = eachSystem ({ pkgs, system, ... }:
         {
           tests-unit = self.packages.${system}.test-unit;
           tests-integration = self.packages.${system}.test-integration;
         });
 
-      devShells = eachSystem ({ pkgs, ... }: {
+      apps = eachSystem ({ garnix, ... }: garnix.apps);
+
+      # Internal: Garnix action names per system, used by
+      # scripts/regen-garnix-yaml.sh so nix/garnix.nix is the single
+      # source of truth for the action set.
+      garnixActionNames = eachSystem ({ garnix, ... }: garnix.actionNames);
+
+      devShells = eachSystem ({ pkgs, garnix, ... }: {
         default =
           pkgs.devshell.mkShell {
             packages = basePackages pkgs;
@@ -269,14 +286,28 @@
               {
                 name = "tests-network";
                 category = "test categories";
-                help = "Run Clojure network-requiring integration tests (requires internet)";
-                command = testScripts.network-integration;
+                help = "Run Clojure network-requiring integration tests (one Garnix Action)";
+                command = ''nix run .#tests-network -- "$@"'';
               }
               {
                 name = "tests-e2e";
                 category = "test categories";
-                help = "Run end-to-end tests with bats";
-                command = testScripts.e2e;
+                help = "Run all E2E bats tests sequentially (one Garnix Action per file in CI)";
+                command = ''
+                  set -e
+                  failed=0
+                  for app in ${pkgs.lib.concatStringsSep " " garnix.e2eActionNames}; do
+                    echo ""
+                    echo "=================================================="
+                    echo "=== $app"
+                    echo "=================================================="
+                    nix run ".#$app" || failed=$((failed + 1))
+                  done
+                  if [ "$failed" -ne 0 ]; then
+                    echo "$failed E2E action(s) failed."
+                  fi
+                  exit $failed
+                '';
               }
               {
                 name = "tests-all";

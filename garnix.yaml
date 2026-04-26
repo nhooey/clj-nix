@@ -1,0 +1,45 @@
+# Garnix CI configuration for clj-nix.
+#
+# Builds: every flake output for x86_64-linux (the only platform we
+# run actions on, per migration decision #9). This causes Garnix to
+# evaluate and build every package, devShell, and check, which
+# includes the sandbox flake checks (tests-unit, tests-integration)
+# that all actions depend on.
+#
+# Actions: one Garnix Action per Garnix-facing app defined in
+# nix/garnix.nix. Actions are grouped by setup cost, not by file:
+#   - tests-network            — every kaocha ^:network-tagged test
+#   - tests-e2e-clojurescript  — all clojurescript*.bats files
+#   - tests-e2e-jvm-projects   — leiningen.bats + packages.bats
+#   - tests-e2e-new-project    — new-project.bats (the only podman user)
+#
+# Each action declares withRepoContents: true so the source tree is
+# available at $PWD when the script runs (the bats tests need it for
+# `nix flake new --template`, `mustache`, fixtures, etc.).
+#
+# Adding a new bats file? Append its filename to one of the e2eGroups
+# in nix/garnix.nix, then run ./scripts/regen-garnix-yaml.sh. The Nix
+# eval enforces every bats file is assigned to exactly one group.
+
+builds:
+  include:
+    - '*.x86_64-linux.*'
+  exclude: []
+
+actions:
+
+  - on: push
+    run: tests-network
+    withRepoContents: true
+
+  - on: push
+    run: tests-e2e-clojurescript
+    withRepoContents: true
+
+  - on: push
+    run: tests-e2e-jvm-projects
+    withRepoContents: true
+
+  - on: push
+    run: tests-e2e-new-project
+    withRepoContents: true

@@ -6,32 +6,22 @@
   description = "A clj-nix flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    clj-nix = {
-      url = "{{cljnixUrl}}";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    clj-nix.url = "{{cljnixUrl}}";
+    nixpkgs.follows = "clj-nix/nixpkgs";
   };
-  outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-      clj-nix,
-    }:
 
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ clj-nix.overlays.default ];
-        };
-      in
-
-      {
-        packages = {
+  outputs = { self, nixpkgs, clj-nix }:
+    let
+      systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+      perSystem = system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ clj-nix.overlays.default ];
+          };
+        in
+        {
           mkCljBin-test = pkgs.mkCljBin {
             projectSrc = ./.;
             name = "me.lafuente/cljdemo";
@@ -52,6 +42,8 @@
             checkPhase = "lein test";
           };
         };
-      }
-    );
+    in
+    {
+      packages = forAllSystems perSystem;
+    };
 }
