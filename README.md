@@ -1,5 +1,7 @@
 # clj-nix
 
+[![built with garnix](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fnhooey%2Fclj-nix)](https://garnix.io/repo/nhooey/clj-nix)
+
 Nix helpers for Clojure projects
 
 STATUS: alpha.
