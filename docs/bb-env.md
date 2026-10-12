@@ -127,7 +127,7 @@ to define the `bb-pkgs` argument to `babashkaEnv`, e.g.:
 outputs = { self, nixpkgs, clj-nix, ... }@inputs:
 
   let
-    supportedSystems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
+    supportedSystems = [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ];
 
     eachSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
       pkgs = import nixpkgs { inherit system; };
