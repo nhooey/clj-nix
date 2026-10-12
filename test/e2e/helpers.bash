@@ -36,7 +36,7 @@ nix_run_and_log() {
 setup_temp_project_vars() {
   project_dir="$BATS_FILE_TMPDIR/${1:-clj-nix_project}"
   export project_dir
-  cljnix_dir=$(dirname "$BATS_TEST_DIRNAME")
+  cljnix_dir=$(dirname "$(dirname "$BATS_TEST_DIRNAME")")
   export cljnix_dir
 }
 
