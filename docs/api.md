@@ -1,5 +1,8 @@
 # API
 
+The builder functions below come from `overlays.default` or from
+`clj-nix.legacyPackages.${system}`.
+
 ## Derivations
 
 - [mkCljBin](#mkcljbin): Creates a clojure application
