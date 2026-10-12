@@ -23,7 +23,7 @@
       packages = nixpkgs.lib.genAttrs supportedSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          cljpkgs = clj-nix.packages."${system}";
+          cljpkgs = clj-nix.legacyPackages."${system}";
         in
         {
           mkCljBin-test = cljpkgs.mkCljBin {
