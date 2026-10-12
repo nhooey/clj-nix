@@ -35,6 +35,10 @@ jobs:
         run: |
           nix develop --command tests-integration
 
+      - name: Network tests
+        run: |
+          nix develop --command tests-network
+
       - name: End-to-end tests
         run: |
           nix develop --command tests-e2e
