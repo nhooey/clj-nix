@@ -184,7 +184,14 @@ stdenv.mkDerivation ({
 
       # jarPath variable could be defined in the preInstall hook, don't override it
       if [ -z ''${jarPath+x} ]; then
-        jarPath="$(find target -type f -name "*.jar" -print | head -n 1)"
+        # Build tools often write a thin jar next to the uberjar (`lein
+        # uberjar`, tools.build's `jar` + `uber`). Prefer the `-standalone`
+        # one, and sort, because `find` lists files in directory order, which
+        # differs between filesystems.
+        jarPath="$(find target -type f -name "*-standalone.jar" -print | sort | head -n 1)"
+        if [ -z "$jarPath" ]; then
+          jarPath="$(find target -type f -name "*.jar" -print | sort | head -n 1)"
+        fi
       fi
 
       cp $jarPath $lib
