@@ -40,7 +40,6 @@ setup_file() {
 
 # bats test_tags=lein
 @test "mkCljBin (leiningen)" {
-    skip
     nix build .#mkCljBin-test --print-out-paths >> "$DERIVATIONS"
     run -0 ./result/bin/cljdemo
     [ "$output" = "Hello, World!" ]
@@ -48,7 +47,6 @@ setup_file() {
 
 # bats test_tags=lein
 @test "mkCljBin with tests (leiningen)" {
-    skip
     nix build .#mkCljBin-test-with-tests --print-out-paths >> "$DERIVATIONS"
     run -0 ./result/bin/cljdemo
     [ "$output" = "Hello, World!" ]

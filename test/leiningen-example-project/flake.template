@@ -35,7 +35,7 @@
           mkCljBin-test = pkgs.mkCljBin {
             projectSrc = ./.;
             name = "me.lafuente/cljdemo";
-            main-ns = "hello.core";
+            main-ns = "leiningen-example-project.core";
             jdkRunner = pkgs.jdk_headless;
             enableLeiningen = true;
             buildCommand = "lein uberjar";
@@ -44,7 +44,7 @@
           mkCljBin-test-with-tests = pkgs.mkCljBin {
             projectSrc = ./.;
             name = "me.lafuente/cljdemo";
-            main-ns = "hello.core";
+            main-ns = "leiningen-example-project.core";
             jdkRunner = pkgs.jdk_headless;
             enableLeiningen = true;
             buildCommand = "lein uberjar";
