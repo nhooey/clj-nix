@@ -4,7 +4,8 @@
   "args" : {
     "owner" : "babashka",
     "repo" : "babashka",
+    "tag" : "v1.13.226",
     "hash" : "sha256-CfgvTwbLPmGb3XwZ8mOH3hMNXXaglxiDG5ZEH8y4CgU=",
-    "fetchSubmodules" : "v1.13.226"
+    "fetchSubmodules" : true
   }
 }
