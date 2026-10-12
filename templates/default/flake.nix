@@ -15,7 +15,9 @@
       clj-nix,
     }:
 
-    flake-utils.lib.eachDefaultSystem (system: {
+    # Nixpkgs 26.11 dropped x86_64-darwin; flake-utils.lib.eachDefaultSystem
+    # still lists it.
+    flake-utils.lib.eachSystem [ "aarch64-darwin" "aarch64-linux" "x86_64-linux" ] (system: {
 
       packages = {
 
