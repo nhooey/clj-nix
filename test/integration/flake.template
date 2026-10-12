@@ -18,14 +18,13 @@
         "x86_64-darwin"
         "x86_64-linux"
       ];
-    in
-    {
-      packages = nixpkgs.lib.genAttrs supportedSystems (system:
+
+      # The derivations the tests build, for the given package set
+      testDrvs = pkgs:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
-          cljpkgs = clj-nix.legacyPackages."${system}";
+          cljpkgs = clj-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
         in
-        {
+        rec {
           mkCljBin-test = cljpkgs.mkCljBin {
             projectSrc = ./.;
             name = "me.lafuente/cljdemo";
@@ -34,30 +33,44 @@
           };
 
           customJdk-test = cljpkgs.customJdk {
-            cljDrv = self.packages."${system}".mkCljBin-test;
+            cljDrv = mkCljBin-test;
             locales = "en,es";
           };
 
           mkGraalBin-test = cljpkgs.mkGraalBin {
-            cljDrv = self.packages."${system}".mkCljBin-test;
+            cljDrv = mkCljBin-test;
             graalvmXmx = "-J-Xmx5g";
             meta.description = "mkGraalBin test";
           };
+        };
+    in
+    {
+      packages = nixpkgs.lib.genAttrs supportedSystems (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          cljpkgs = clj-nix.legacyPackages.${system};
 
+          # Container images run on Linux, so on macOS build them and their
+          # contents for Linux on the same CPU (this needs a Linux builder).
+          # On Linux, pkgsLinux is pkgs itself.
+          linuxPkgs = pkgs.pkgsLinux;
+          linuxDrvs = testDrvs linuxPkgs;
+        in
+        testDrvs pkgs // {
           jvm-container-test =
-            pkgs.dockerTools.buildLayeredImage {
+            linuxPkgs.dockerTools.buildLayeredImage {
               name = "jvm-container-test";
               tag = "latest";
               config = {
-                Cmd = clj-nix.lib.mkCljCli { jdkDrv = self.packages."${system}".customJdk-test; };
+                Cmd = clj-nix.lib.mkCljCli { jdkDrv = linuxDrvs.customJdk-test; };
               };
             };
 
           graal-container-test =
             let
-              graalDrv = self.packages."${system}".mkGraalBin-test;
+              graalDrv = linuxDrvs.mkGraalBin-test;
             in
-            pkgs.dockerTools.buildLayeredImage {
+            linuxPkgs.dockerTools.buildLayeredImage {
               name = "graal-container-test";
               tag = "latest";
               config = {
