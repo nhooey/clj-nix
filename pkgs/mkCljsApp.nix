@@ -1,6 +1,8 @@
 { stdenv
 , lib
 , clojure
+, nodejs
+, importNpmLock
 
   # Custom utils
 , clj-builder
@@ -18,6 +20,8 @@
 , buildCommand ? null
 , lockfile ? null
 , installPaths ? [ "public" ]
+, npmRoot ? null
+, nodeModules ? null
 
   # Needed for version ranges
 , maven-extra ? [ ]
@@ -35,6 +39,9 @@ let
     "buildCommand"
     "lockfile"
     "installPaths"
+    # Not in the environment: linkNodeModulesHook would cd into $npmRoot
+    "npmRoot"
+    "nodeModules"
     "maven-extra"
     "nativeBuildInputs"
     "passthru"
@@ -44,6 +51,18 @@ let
     lockfile = if isNull lockfile then (projectSrc + "/deps-lock.json") else lockfile;
     inherit maven-extra;
   };
+
+  # node_modules from package-lock.json, one fixed-output fetch per package
+  # (hashes from the lock file's `integrity` fields)
+  resolvedNodeModules =
+    if nodeModules != null then nodeModules
+    else if npmRoot != null then
+      importNpmLock.buildNodeModules
+        {
+          inherit npmRoot nodejs;
+        }
+    else null;
+  hasNodeModules = resolvedNodeModules != null;
 
   fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
   artifactId = builtins.elemAt (lib.strings.splitString "/" fullId) 1;
@@ -67,10 +86,14 @@ stdenv.mkDerivation ({
   nativeBuildInputs =
     attrs.nativeBuildInputs or [ ]
       ++
-      [ fake-git clojure ];
+      [ fake-git clojure ]
+      # Links $npmDeps/node_modules/* into ./node_modules before configure,
+      # and puts node_modules/.bin on PATH
+      ++ lib.optional hasNodeModules importNpmLock.linkNodeModulesHook;
 
   passthru = {
     inherit deps-cache fullId artifactId;
+    node-modules = resolvedNodeModules;
   } // (attrs.passthru or { });
 
   preBuildPhases = [ "preBuildPhase" ];
@@ -136,4 +159,17 @@ stdenv.mkDerivation ({
     ''
       runHook postInstall
     '';
+} // lib.optionalAttrs hasNodeModules {
+  # Read by linkNodeModulesHook
+  npmDeps = resolvedNodeModules;
+
+  # linkNodeModulesHook only logs and skips entries of an existing
+  # node_modules, so a stale local install would be used silently
+  preConfigurePhases = [ "nodeModulesCheckPhase" ];
+  nodeModulesCheckPhase = ''
+    if [ -e node_modules ]; then
+      echo "mkCljsApp: projectSrc already contains node_modules; exclude it from the source (npmRoot/nodeModules provide it)" >&2
+      exit 1
+    fi
+  '';
 } // extra-attrs)
