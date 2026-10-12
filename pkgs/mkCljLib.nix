@@ -3,7 +3,8 @@
   lib,
   clojure,
 
-  # Used by clj tools.build to compile the code
+  # Default JDK.
+  # Needed by clj tools.build to compile the code
   jdk,
 
   # Custom utils
@@ -13,6 +14,7 @@
 
 {
   # User options
+  jdkRunner ? jdk, # JDK used to build the library
   projectSrc,
   name,
   version ? "DEV",
@@ -24,6 +26,7 @@
 let
 
   extra-attrs = builtins.removeAttrs attrs [
+    "jdkRunner"
     "projectSrc"
     "name"
     "version"
@@ -36,6 +39,8 @@ let
     lockfile = (projectSrc + "/deps-lock.json");
     inherit maven-extra;
   };
+
+  builder = clj-builder.override { jdk = jdkRunner; };
 
   fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
   groupId = builtins.head (lib.strings.splitString "/" fullId);
@@ -51,8 +56,8 @@ stdenv.mkDerivation (
 
     # Build time deps
     nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ [
-      jdk
-      clojure
+      jdkRunner
+      (clojure.override { jdk = jdkRunner; })
     ];
 
     passthru = {
@@ -66,7 +71,7 @@ stdenv.mkDerivation (
 
     patchPhase = ''
       runHook prePatch
-      ${clj-builder}/bin/clj-builder patch-git-sha "$(pwd)"
+      ${builder}/bin/clj-builder patch-git-sha "$(pwd)"
       runHook postPatch
     '';
 
@@ -79,7 +84,7 @@ stdenv.mkDerivation (
     + (
       if builtins.isNull buildCommand then
         ''
-          ${clj-builder}/bin/clj-builder jar "${fullId}" "${version}"
+          ${builder}/bin/clj-builder jar "${fullId}" "${version}"
         ''
       else
         ''
