@@ -50,6 +50,26 @@
             buildId = "alias-app";
           };
 
+          # A JDK other than nixpkgs' default `jdk`. Not an older one:
+          # shadow-cljs 3's Closure Compiler needs Java 21 or newer.
+          mkCljsApp-test-jdk = pkgs.mkCljsApp {
+            projectSrc = ./.;
+            name = "me.lafuente/cljs-example";
+            version = "0.1.0";
+            jdkRunner = pkgs.jdk25_headless;
+            # Read by clojurescript.bats: the version the build must record,
+            # and the default that it must differ from
+            passthru = {
+              jdkRunnerVersion = pkgs.lib.versions.major pkgs.jdk25_headless.version;
+              defaultJdkVersion = pkgs.lib.versions.major pkgs.jdk.version;
+            };
+            # Record the JVM the build's `clojure` runs on
+            postInstall = ''
+              clojure -M -e '(print (System/getProperty "java.specification.version"))' \
+                > "$out/java-version.txt"
+            '';
+          };
+
           # The `npm` build requires left-pad, from package-lock.json
           mkCljsApp-test-npm = pkgs.mkCljsApp {
             projectSrc = ./.;

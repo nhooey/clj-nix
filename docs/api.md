@@ -227,6 +227,12 @@ Creates a ClojureScript application, compiled with a
 following attributes (those without a default are mandatory, extra attributes
 are passed to **mkDerivation**):
 
+- **jdkRunner**: JDK that runs the build: the Clojure CLI, and so
+  shadow-cljs and the Closure Compiler. The Closure Compiler that shadow-cljs 3
+  uses needs Java 21 or newer.
+  The JDK isn't added to `PATH` by itself; add it to `nativeBuildInputs` if
+  your `buildCommand` calls `java` directly. (Default: `jdk`)
+
 - **projectSrc**: Project source code. It needs a `deps.edn` with
   `thheller/shadow-cljs` in its dependencies, and a `shadow-cljs.edn` with the
   build.
@@ -288,6 +294,16 @@ mkCljsApp {
   projectSrc = ./.;
   name = "me.lafuente/my-app";
   version = "1.0.0";
+}
+```
+
+**Example**, built on a specific JDK:
+
+```nix
+mkCljsApp {
+  jdkRunner = pkgs.jdk25_headless;
+  projectSrc = ./.;
+  name = "me.lafuente/my-app";
 }
 ```
 
