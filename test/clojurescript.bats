@@ -31,6 +31,14 @@ setup_file() {
 }
 
 # bats test_tags=cljs
+@test "mkCljsApp with jdkRunner" {
+    nix_build_with_result .#mkCljsApp-test-jdk
+    [ -s result/js/main.js ]
+    # jdk25_headless, not the default jdk (21)
+    [ "$(cat result/java-version.txt)" = "25" ]
+}
+
+# bats test_tags=cljs
 @test "mkCljsApp with npmRoot" {
     nix_build_with_result .#mkCljsApp-test-npm
     [ -s result/js/main.js ]
