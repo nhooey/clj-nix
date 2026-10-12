@@ -9,7 +9,7 @@
 
 (def default-mvn-url "https://repo1.maven.org/maven2/")
 
-(deftest manual-manifest
+(deftest ^:network manual-manifest
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn"
@@ -26,7 +26,7 @@
                        :hash "sha256-c6Rfl+wMJpkSnS1DOPwHCQjrNmu+KLJoracqSm2luOk="}])
            (:git-deps (c/lock-file project-dir)))))))
 
-(deftest maestro-build-test
+(deftest ^:network maestro-build-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn"
@@ -44,7 +44,7 @@
                        :ancestor? {"5d3ec3037483f09336a79e9e38eb4f64e4b30232" false}}])
            (:git-deps (c/lock-file project-dir)))))))
 
-(deftest maestro-test
+(deftest ^:network maestro-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn"
@@ -61,7 +61,7 @@
                        :hash "sha256-jYYl5WIeyjmL5yv3CMPua0gtYFkccJCwEYNdnaibIuQ="}])
            (:git-deps (c/lock-file project-dir)))))))
 
-(deftest clj-yaml-prep-lib-hash-test
+(deftest ^:network clj-yaml-prep-lib-hash-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn"
@@ -79,7 +79,7 @@
                 :needs-prep true}
                dep-info))))))
 
-(deftest metrics-test
+(deftest ^:network metrics-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn"
@@ -94,7 +94,7 @@
                        :hash "sha256-4x9bwvxY3KzQzzH36vpD07mBhz2sDT8P/rsUVnXxyKg="}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest firebase-admin-test
+(deftest ^:network firebase-admin-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'com.google.firebase/firebase-admin {:mvn/version "9.2.0"}}})
@@ -104,7 +104,7 @@
                        :hash "sha256-pPTZGop6SjnQZqJ4tigwrUxpF3ESo6ALgns6CpoRgEA="}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest reitit-test
+(deftest ^:network reitit-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'metosin/reitit {:mvn/version "0.5.15"}}})
@@ -114,7 +114,7 @@
                        :hash "sha256-vzZFqtQ6YeO6BQ2F11el0+VT6kLxza4EpHmhtHeBa5g="}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest jitpack-extra-mvn-repos-test
+(deftest ^:network jitpack-extra-mvn-repos-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:mvn/repos {"jitpack" {:url "https://jitpack.io"}}
@@ -125,7 +125,7 @@
                        :hash "sha256-GTOA6l5NLkhBXTv3mxsacna/xDfap9hnr7m/uN4iuvk="}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest invalid-pom-test
+(deftest ^:network invalid-pom-test
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'url-normalizer/url-normalizer {:mvn/version "0.5.3-1"}}})
@@ -136,7 +136,7 @@
                        :hash "sha256-C7dXlXPQwHQ8O4HAN297KRrPb/OwP0DQvULK2gOjYlA="}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest invalid-_remote.repositories
+(deftest ^:network invalid-_remote.repositories
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'org.clojure/clojure {:mvn/version "1.11.0-alpha1"}}})
