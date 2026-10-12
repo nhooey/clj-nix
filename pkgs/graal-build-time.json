@@ -1,0 +1,8 @@
+{
+  "version" : "1.0.6",
+  "fetcher" : "fetchurl",
+  "args" : {
+    "url" : "https://repo.clojars.org/com/github/clj-easy/graal-build-time/1.0.6/graal-build-time-1.0.6.jar",
+    "hash" : "sha256-IQTd330QP1zB40sI2CsbYhcWjudengHSYd22B4ZueLw="
+  }
+}
