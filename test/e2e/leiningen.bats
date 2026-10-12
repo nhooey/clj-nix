@@ -10,9 +10,9 @@ setup_file() {
 
   setup_temp_project_vars
 
-  leiningen_project_path="$cljnix_dir/test/leiningen-example-project"
+  leiningen_project_path="$cljnix_dir/test/fixtures/example-projects/leiningen"
   cp -r "$leiningen_project_path/." "$project_dir"
-  init_project_flake "$cljnix_dir" "$project_dir/flake.template"
+  init_project_flake "$cljnix_dir" "$project_dir/flake-template.nix"
   ls -la
   cat flake.nix
 }

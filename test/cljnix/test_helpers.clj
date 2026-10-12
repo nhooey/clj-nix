@@ -10,10 +10,10 @@
     [babashka.fs :as fs]))
 
 (defn fixture-deps
-  "Reads test/fixtures/<fixture>/deps.edn. The fixtures are files, not
+  "Reads test/fixtures/deps-graphs/<fixture>/deps.edn. The fixtures are files, not
   literals, so that `test/deps-lock.json` locks them too."
   [fixture]
-  (edn/read-string (slurp (io/resource (str "fixtures/" fixture "/deps.edn")))))
+  (edn/read-string (slurp (io/resource (str "fixtures/deps-graphs/" fixture "/deps.edn")))))
 
 (defn- deps-file
   [content]
