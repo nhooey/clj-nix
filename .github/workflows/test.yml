@@ -31,13 +31,9 @@ jobs:
         run: |
           nix flake check --no-build --all-systems
 
-      - name: Unit tests
+      - name: Unit and integration tests (sandboxed flake checks)
         run: |
-          nix develop --command tests-unit
-
-      - name: Integration tests
-        run: |
-          nix develop --command tests-integration
+          nix flake check -L
 
       - name: Network tests
         run: |
