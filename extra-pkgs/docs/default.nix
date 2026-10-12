@@ -1,6 +1,6 @@
 {
   stdenv,
-  python311Packages,
+  python3Packages,
   pkgs,
   ...
 }:
@@ -35,12 +35,12 @@ let
 in
 
 stdenv.mkDerivation {
-  pname = "omics-platform-docs";
+  pname = "clj-nix-docs";
   version = "1.0.0";
 
   src = ../../.;
 
-  buildInputs = with python311Packages; [
+  buildInputs = with python3Packages; [
     mkdocs-material
     mkdocs
   ];
