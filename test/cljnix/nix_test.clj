@@ -8,11 +8,9 @@
     [cljnix.nix :as nix]
     [matcher-combinators.test]))
 
-(def mvn-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}}})
+(def mvn-deps (h/fixture-deps "nix-mvn"))
 
-(def git-deps '{:deps {io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
-                       io.github.weavejester/medley {:git/sha "0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"}
-                       io.github.teknql/systemic {:git/sha "2c0be3a90884f998a61f2a8174cff3c5a15a30bf"}}})
+(def git-deps (h/fixture-deps "nix-git"))
 
 (use-fixtures :once (h/deps-cache-fixture mvn-deps))
 

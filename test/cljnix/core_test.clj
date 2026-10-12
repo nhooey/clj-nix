@@ -10,12 +10,7 @@
     [matcher-combinators.test]
     [matcher-combinators.matchers :as m]))
 
-(def all-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
-                       clj-kondo/clj-kondo {:mvn/version "2022.04.26-20220502.201054-5"}
-                       cider/piggieback    {:mvn/version "0.4.1-SNAPSHOT"}
-                       io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
-                       io.github.weavejester/medley {:git/tag "1.4.0"
-                                                     :git/sha "0044c6a"}}})
+(def all-deps (h/fixture-deps "core"))
 
 (defn- dissoc-dep
   [m dep]
@@ -147,28 +142,6 @@
           mvn-deps)))
 
 
-  (testing "Latest SNAPSHOT version is used"
-    (let [mvn-deps (maven-deps {:deps {'clj-kondo/clj-kondo {:mvn/version "2022.04.26-SNAPSHOT"}}})
-          snapshot-resolved-version "2022.04.26-20220526.212013-27"]
-      (is (match?
-            {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".jar",)
-             :mvn-repo "https://repo.clojars.org/",
-             :snapshot "clj-kondo-2022.04.26-SNAPSHOT.jar",}
-            (h/find-dep 'clj-kondo/clj-kondo mvn-deps)))
-      (is (match?
-            {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".pom")
-             :mvn-repo "https://repo.clojars.org/",
-             :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom",}
-            (h/find-pom "clj-kondo/clj-kondo" mvn-deps)))
-      (is (match?
-            (m/embeds [{:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".jar",)
-                        :mvn-repo "https://repo.clojars.org/",
-                        :snapshot "clj-kondo-2022.04.26-SNAPSHOT.jar",}
-                       {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".pom")
-                        :mvn-repo "https://repo.clojars.org/",
-                        :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom"}])
-            mvn-deps))))
-
   (testing "Exact SNAPSHOT version is used"
     (let [mvn-deps (maven-deps {:deps {'clj-kondo/clj-kondo {:mvn/version "2022.04.26-20220502.201054-5"}}})]
       (is (match?
@@ -187,6 +160,31 @@
                         :mvn-repo "https://repo.clojars.org/",
                         :snapshot "clj-kondo-2022.04.26-SNAPSHOT.jar",}
                        {:mvn-path "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-2022.04.26-20220502.201054-5.pom",
+                        :mvn-repo "https://repo.clojars.org/",
+                        :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom"}])
+            mvn-deps)))))
+
+(deftest ^:network maven-deps-latest-snapshot-test
+  ;; Which build is the latest comes from the repository's
+  ;; maven-metadata.xml, which a lock file doesn't pin.
+  (testing "Latest SNAPSHOT version is used"
+    (let [mvn-deps (maven-deps {:deps {'clj-kondo/clj-kondo {:mvn/version "2022.04.26-SNAPSHOT"}}})
+          snapshot-resolved-version "2022.04.26-20220526.212013-27"]
+      (is (match?
+            {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".jar",)
+             :mvn-repo "https://repo.clojars.org/",
+             :snapshot "clj-kondo-2022.04.26-SNAPSHOT.jar",}
+            (h/find-dep 'clj-kondo/clj-kondo mvn-deps)))
+      (is (match?
+            {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".pom")
+             :mvn-repo "https://repo.clojars.org/",
+             :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom",}
+            (h/find-pom "clj-kondo/clj-kondo" mvn-deps)))
+      (is (match?
+            (m/embeds [{:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".jar",)
+                        :mvn-repo "https://repo.clojars.org/",
+                        :snapshot "clj-kondo-2022.04.26-SNAPSHOT.jar",}
+                       {:mvn-path (str "clj-kondo/clj-kondo/2022.04.26-SNAPSHOT/clj-kondo-" snapshot-resolved-version ".pom")
                         :mvn-repo "https://repo.clojars.org/",
                         :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom"}])
             mvn-deps)))))
