@@ -8,4 +8,9 @@
           :alias-app {:target :browser
                       :output-dir "public/js"
                       :asset-path "/js"
-                      :modules {:main {:init-fn cljs-example.alias/init}}}}}
+                      :modules {:main {:init-fn cljs-example.alias/init}}}
+          ;; Requires the npm package in package.json, for the npmRoot package
+          :npm {:target :browser
+                :output-dir "public/js"
+                :asset-path "/js"
+                :modules {:main {:init-fn cljs-example.npm/init}}}}}
