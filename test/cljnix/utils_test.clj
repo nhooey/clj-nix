@@ -5,7 +5,7 @@
     [cljnix.test-helpers :as h]
     [clojure.tools.deps.util.maven :as mvn]
     [babashka.fs :as fs]
-    [clojure.tools.deps :as deps]))
+    [clojure.tools.deps.edn :as deps-edn]))
 
 (def my-deps (h/fixture-deps "utils"))
 
@@ -109,7 +109,7 @@
       (spit-helper "deps-lock.json" lock-data {:json? true})
       (utils/expand-shas! project-dir)
       (is (= deps-data-full
-             (deps/slurp-deps (fs/file project-dir "deps.edn")))))))
+             (deps-edn/read-deps (fs/file project-dir "deps.edn")))))))
 
 (deftest expand-sha-ignore-not-found-tests
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
@@ -118,7 +118,7 @@
       (spit-helper "deps-lock.json" (update lock-data "git-deps" pop) {:json? true})
       (utils/expand-shas! project-dir)
       (is (= deps-data
-             (deps/slurp-deps (fs/file project-dir "deps.edn")))))))
+             (deps-edn/read-deps (fs/file project-dir "deps.edn")))))))
 
 (deftest str->keyword-test
   (is (= :foo (utils/str->keyword "foo")))
