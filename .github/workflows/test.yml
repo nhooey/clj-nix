@@ -23,6 +23,10 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
+      - name: Lint
+        run: |
+          nix develop --command lint
+
       - name: Unit tests
         run: |
           nix develop --command tests-unit
