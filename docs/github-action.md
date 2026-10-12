@@ -15,15 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@v31
 
       - name: Update deps-lock
         run: "nix run github:jlesquembre/clj-nix#deps-lock"
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: Update deps-lock.json
           title: Update deps-lock.json
@@ -32,8 +32,9 @@ jobs:
 
 !!! note
 
-    The action versions above are current as of 2025. You may want to check
-    for newer versions of these actions:
+    Check for newer versions of these actions, or let
+    [Dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot)
+    keep them up to date:
 
     - [actions/checkout](https://github.com/actions/checkout)
     - [cachix/install-nix-action](https://github.com/cachix/install-nix-action)
