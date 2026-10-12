@@ -9,6 +9,7 @@
     [clojure.tools.deps.util.maven :as mvn]
     [clojure.tools.deps.cli.api :as tools]
     [clojure.tools.deps :as deps]
+    [clojure.tools.deps.edn :as deps-edn]
     [clojure.tools.gitlibs.config :as gitlibs-config]
     [clojure.tools.gitlibs.impl :as gitlibs-impl]
     [clojure.data.json :as json]
@@ -264,7 +265,7 @@
                                   (fs/path deps-root))
                 deps-file (fs/path git-project-dir "deps.edn")]
           :when (fs/exists? deps-file)
-          :let [prep-alias (some-> deps-file fs/file deps/slurp-deps :deps/prep-lib :alias)]
+          :let [prep-alias (some-> deps-file fs/file deps-edn/read-deps :deps/prep-lib :alias)]
           :when prep-alias]
     (make-cache! {:cache-dir cache-dir
                   :prep-options {:user nil
@@ -382,7 +383,7 @@
     (fs/file f)
     (-> f
         fs/file
-        deps/slurp-deps
+        deps-edn/read-deps
         :aliases
         keys
         (->> (remove (set alias-exclude)))
