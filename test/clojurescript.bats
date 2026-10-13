@@ -29,3 +29,24 @@ setup_file() {
     [ -f result/index.html ]
     grep -q "through the alias" result/js/main.js
 }
+
+# bats test_tags=cljs
+@test "mkCljsApp with npmRoot" {
+    nix_build_with_result .#mkCljsApp-test-npm
+    [ -s result/js/main.js ]
+    # shadow-cljs lists the bundled sources in the manifest
+    grep -qF '"node_modules/left-pad/index.js"' result/js/manifest.edn
+}
+
+# bats test_tags=cljs
+@test "mkCljsApp exposes node_modules in passthru" {
+    node_modules=$(nix build .#mkCljsApp-test-npm.node-modules --no-link --print-out-paths)
+    echo "$node_modules" >> "$DERIVATIONS"
+    [ -f "$node_modules/node_modules/left-pad/index.js" ]
+}
+
+# bats test_tags=cljs
+@test "mkCljsApp with nodeModules" {
+    nix_build_with_result .#mkCljsApp-test-node-modules
+    grep -qF '"node_modules/left-pad/index.js"' result/js/manifest.edn
+}
