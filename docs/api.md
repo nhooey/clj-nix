@@ -258,6 +258,21 @@ are passed to **mkDerivation**):
   exist. The default matches the usual browser layout, with
   `:output-dir "public/js"` served from `public/`. (Default: `[ "public" ]`)
 
+- **npmRoot**: Directory with the `package.json` and `package-lock.json` of the
+  npm packages the build requires. `node_modules` is built from the lock file
+  with nixpkgs'
+  [importNpmLock](https://nixos.org/manual/nixpkgs/unstable/#javascript-buildNpmPackage-importNpmLock)
+  and linked into the project root, where shadow-cljs looks for it. No extra
+  hash is needed: each package is fetched with its `integrity` hash from the
+  lock file. `projectSrc` must not contain a `node_modules` directory.
+  (Default: `null`)
+
+- **nodeModules**: A derivation with a `node_modules` directory, used instead
+  of building one from `npmRoot`, e.g. from
+  `pkgs.importNpmLock.buildNodeModules` with other options. (Default: `null`)
+
+The `node_modules` derivation is available as `passthru.node-modules`.
+
 The build runs on the JVM only. If your `buildCommand` needs Node.js, add it
 with `nativeBuildInputs = [ pkgs.nodejs ];`.
 
@@ -272,6 +287,17 @@ mkCljsApp {
   projectSrc = ./.;
   name = "me.lafuente/my-app";
   version = "1.0.0";
+}
+```
+
+**Example**, with npm dependencies:
+
+```nix
+# package.json and package-lock.json are in the project root
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/my-app";
+  npmRoot = ./.;
 }
 ```
 
