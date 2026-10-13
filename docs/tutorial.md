@@ -120,7 +120,7 @@ clj-container =
     name = "clj-nix";
     tag = "latest";
     config = {
-      Cmd = clj-nix.lib.mkCljCli self.packages."${system}".jdk-tuto { };
+      Cmd = clj-nix.lib.mkCljCli { jdkDrv = self.packages."${system}".jdk-tuto; };
     };
   };
 ```
