@@ -972,7 +972,8 @@ phase.</p>
 default are mandatory, extra attributes are passed to <strong>mkDerivation</strong>):</p>
 <ul>
 <li>
-<p><strong>jdkRunner</strong>: JDK used at runtime by the application. (Default: <code>jdk</code>)</p>
+<p><strong>jdkRunner</strong>: JDK that builds and runs the application (Clojure, clj-builder
+  and Leiningen). (Default: <code>jdk</code>)</p>
 </li>
 <li>
 <p><strong>projectSrc</strong>: Project source code.</p>
@@ -1332,8 +1333,8 @@ insensitive and we can omit the <code>BABASHKA_FEATURE_</code> prefix.</p>
   in a file as bash scripts. Useful to create a nix develpment shell with
   <a href="https://github.com/numtide/devshell">devshell</a></li>
 <li><a href="#mk-deps-cache">mk-deps-cache</a>: Creates a Clojure deps cache (maven cache +
-  gitlibs cache). Used by <code>mkCljBin</code> and <code>mkCljLib</code>. You can use this function
-  to to have access to the cache in a nix derivation.</li>
+  gitlibs cache). Used by <code>mkCljBin</code>, <code>mkCljLib</code> and <code>mkCljsApp</code>. You can use
+  this function to to have access to the cache in a nix derivation.</li>
 </ul>
 <h3 id="mkcljcli">mkCljCli</h3>
 <p>Returns a list containing the command and arguments to launch an application
