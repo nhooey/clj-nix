@@ -137,7 +137,7 @@ outputs = { self, nixpkgs, clj-nix, ... }@inputs:
   {
     packages = eachSystem ({ pkgs, system }:
       let
-        mkBabashkaDerivation = clj-nix.outputs.packages.${system}.babashkaEnv {
+        mkBabashkaDerivation = clj-nix.outputs.legacyPackages.${system}.babashkaEnv {
           inherit system pkgs;
           bb-pkgs = self.outputs.packages.${system};
         };

@@ -40,7 +40,8 @@ git add deps-lock.json
 
 ## Create a binary from a Clojure application
 
-First, we create a new package in our flake:
+First, we create a new package in our flake (`cljpkgs` is
+`clj-nix.legacyPackages.${system}`):
 
 ```nix
 clj-tuto = cljpkgs.mkCljBin {
