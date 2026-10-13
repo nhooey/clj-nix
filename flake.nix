@@ -108,9 +108,9 @@
                   clj -X cljnix.bootstrap/as-json :deps-path '"deps.edn"' | jq . > pkgs/builder-lock.json
                   clj -X cljnix.core/clojure-deps-str > src/clojure-deps.edn
                   (cd ./templates/default && nix run ../..#deps-lock)
-                  (cd ./test/leiningen-example-project && nix run ../..#deps-lock -- --lein --lein-profiles foobar && mv deps-lock.json deps-lock-foobar-profile.json)
-                  (cd ./test/leiningen-example-project && nix run ../..#deps-lock -- --lein)
-                  (cd ./test && nix run ..#deps-lock -- --deps-include ../deps.edn $(printf -- '--deps-include %s ' fixtures/*/deps.edn))
+                  (cd ./test/fixtures/example-projects/leiningen && nix run ../../../..#deps-lock -- --lein --lein-profiles foobar && mv deps-lock.json deps-lock-foobar-profile.json)
+                  (cd ./test/fixtures/example-projects/leiningen && nix run ../../../..#deps-lock -- --lein)
+                  (cd ./test && nix run ..#deps-lock -- --deps-include ../deps.edn $(printf -- '--deps-include %s ' fixtures/deps-graphs/*/deps.edn))
                 '';
               }
               {
@@ -193,7 +193,7 @@
                   project_dir="$(mktemp -d clj-nix.XXXXX --tmpdir)/clj-nix_project"
                   mkdir -p "$project_dir"
                   nix flake new --template ${self} "$project_dir"
-                  echo 'cljnixUrl: ${self}' | mustache "${self}/test/integration/flake.template" > "$project_dir/flake.nix"
+                  echo 'cljnixUrl: ${self}' | mustache "${self}/test/integration/flake-template.nix" > "$project_dir/flake.nix"
                   echo "New dummy project: $project_dir"
                 '';
               }
