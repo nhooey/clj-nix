@@ -191,6 +191,9 @@ Creates a jar file for a Clojure library. Takes the following attributes (those
 without a default are mandatory, extra attributes are passed to
 **mkDerivation**):
 
+- **jdkRunner**: JDK used to build the library: it runs the builder and
+  `buildCommand`, and compiles any Java sources. (Default: `jdk`)
+
 - **projectSrc**: Project source code.
 
 - **name**: Derivation and clojure library name. It's recommended to use a
@@ -209,6 +212,7 @@ without a default are mandatory, extra attributes are passed to
 
 ```nix
 mkCljLib {
+  jdkRunner = pkgs.jdk17_headless;
   projectSrc = ./.;
   name = "me.lafuente/my-lib";
   buildCommand = "clj -T:build jar";
