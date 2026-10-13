@@ -1,11 +1,19 @@
 (ns cljnix.test-helpers
   (:require
+    [clojure.edn :as edn]
+    [clojure.java.io :as io]
     [clojure.pprint :as pp]
     [clojure.string :as str]
     [clojure.data.json :as json]
     [clojure.tools.deps.cli.api :as tools]
     [clojure.tools.deps :as deps]
     [babashka.fs :as fs]))
+
+(defn fixture-deps
+  "Reads test/fixtures/<fixture>/deps.edn. The fixtures are files, not
+  literals, so that `test/deps-lock.json` locks them too."
+  [fixture]
+  (edn/read-string (slurp (io/resource (str "fixtures/" fixture "/deps.edn")))))
 
 (defn- deps-file
   [content]
