@@ -71,8 +71,44 @@ jobs:
         run: |
           nix develop --command tests-network
 
+      # The babashka tests run in the babashka job below
       - name: End-to-end tests
         run: |
-          nix develop --command tests-e2e
+          nix develop --command tests-e2e --filter-tags '!babashka'
+          echo "Derivations:"
+          cat "/tmp/.cljnix-derivations"
+
+  # Building babashka takes about 6 minutes per test; run each beside the rest
+  babashka:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [babashka-test, babashka-with-features-test]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/determinate-nix-action@v3
+
+      - uses: Mic92/hestia@v3.1.0
+        with:
+          # Keep equal to the uses: tag; Dependabot bumps only that one
+          version: v3.1.0
+          upstream-cache-filter: true
+          # Builds against current nixos-unstable must not fill the cache
+          read-only: ${{ github.event_name == 'schedule' || inputs.nixpkgs == 'unstable' }}
+
+      - name: Use current nixos-unstable (weekly or on request)
+        if: github.event_name == 'schedule' || inputs.nixpkgs == 'unstable'
+        run: nix flake update nixpkgs
+
+      # bats selects tests that match both filters; files with none skip setup
+      - name: End-to-end test ${{ matrix.test }}
+        run: |
+          nix develop --command tests-e2e --filter-tags babashka --filter '\.#${{ matrix.test }}$'
           echo "Derivations:"
           cat "/tmp/.cljnix-derivations"
