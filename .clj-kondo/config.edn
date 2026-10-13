@@ -1,2 +1,4 @@
 {:linters {;; for  nubank/matcher-combinators
-           :unresolved-symbol {:exclude [(clojure.test/is [match?])]}}}
+           :unresolved-symbol {:exclude [(clojure.test/is [match?])]}}
+ ;; A Leiningen fixture project for the end-to-end tests, not clj-nix code
+ :output {:exclude-files ["^test/leiningen-example-project/"]}}
