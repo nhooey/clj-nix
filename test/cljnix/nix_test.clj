@@ -1,27 +1,40 @@
 (ns cljnix.nix-test
   (:require
     [clojure.test :refer [deftest is use-fixtures]]
+    [clojure.tools.deps.util.maven :as mvn]
+    [clojure.tools.gitlibs :as gitlibs]
     [babashka.fs :as fs]
     [cljnix.test-helpers :as h]
     [cljnix.nix :as nix]
     [matcher-combinators.test]))
 
-(def all-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
-                       io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
+(def mvn-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}}})
+
+(def git-deps '{:deps {io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
                        io.github.weavejester/medley {:git/sha "0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"}
                        io.github.teknql/systemic {:git/sha "2c0be3a90884f998a61f2a8174cff3c5a15a30bf"}}})
 
-(use-fixtures :once (h/deps-cache-fixture all-deps))
+(use-fixtures :once (h/deps-cache-fixture mvn-deps))
+
+(defn- gitlib-path
+  [lib rev]
+  (fs/path (gitlibs/cache-dir) "libs" lib rev))
 
 (deftest nix-hash-test
   (is (= "sha256-I4G26UI6tGUVFFWUSQPROlYkPWAGuRlK/Bv0+HEMtN4="
-         (nix/nix-hash (fs/expand-home "~/.m2/repository/org/clojure/clojure/1.11.1/clojure-1.11.1.jar"))))
+         (nix/nix-hash (fs/path @mvn/cached-local-repo "org/clojure/clojure/1.11.1/clojure-1.11.1.jar")))))
+
+(deftest nix-hash-gitlibs-test
+  ;; Preps the git deps into GITLIBS (cloning them if they aren't cached).
+  ;; Prepped here rather than in the :once fixture, so `nix-hash-test`
+  ;; doesn't need them.
+  (h/prep-deps git-deps)
 
   (is (= "sha256-L+tsBCOxr2kJpIEPJ0A+s8/Ud2jLgfiDQIB+U3/PcG0="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.babashka/fs/7adcefeb773bd786408cdc788582f145f79626a6"))))
+         (nix/nix-hash (gitlib-path "io.github.babashka/fs" "7adcefeb773bd786408cdc788582f145f79626a6"))))
 
   (is (= "sha256-drh0opl3JjrpGadg74wIdOcDTaP2GT31X3O1PGXkvqk="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.weavejester/medley/0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"))))
+         (nix/nix-hash (gitlib-path "io.github.weavejester/medley" "0044c6aacc0b23eafa3b58091f49c794f5a1f5aa"))))
 
   (is (= "sha256-pxbxFZirXL9CD37rhXUw/MMdxMZbLkVqfZIQXSpDqaI="
-         (nix/nix-hash (fs/expand-home "~/.gitlibs/libs/io.github.teknql/systemic/2c0be3a90884f998a61f2a8174cff3c5a15a30bf")))))
+         (nix/nix-hash (gitlib-path "io.github.teknql/systemic" "2c0be3a90884f998a61f2a8174cff3c5a15a30bf")))))
