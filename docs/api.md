@@ -94,7 +94,7 @@ default are mandatory, extra attributes are passed to **mkDerivation**):
 
 ```nix
 mkCljBin {
-  jdkRunner = pkgs.jdk17_headless;
+  jdkRunner = pkgs.jdk_headless;
   projectSrc = ./.;
   name = "me.lafuente/clj-tuto";
   version = "1.0";
@@ -119,7 +119,7 @@ Creates a custom JDK runtime. Takes the following attributes (those without a
 default are mandatory):
 
 - **jdkBase**: JDK used to build the custom JDK with jlink. (Default:
-  `nixpkgs.jdk17_headless`)
+  `nixpkgs.jdk_headless`)
 
 - **cljDrv**: Derivation generated with `mkCljBin`.
 
@@ -144,7 +144,7 @@ default are mandatory):
 
 ```nix
 customJdk {
-  jdkBase = pkgs.jdk17_headless;
+  jdkBase = pkgs.jdk_headless;
   name = "myApp";
   version = "1.0.0";
   cljDrv = myCljBinDerivation;
