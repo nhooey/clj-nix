@@ -817,7 +817,8 @@ flakes, it's possible to point to the remote git repository. E.g.: We can
 replace <code>nix run .#foo</code> with <code>nix run github:/jlesquembre/clj-demo-project#foo</code></p>
 </div>
 <h2 id="create-a-binary-from-a-clojure-application">Create a binary from a Clojure application</h2>
-<p>First, we create a new package in our flake:</p>
+<p>First, we create a new package in our flake (<code>cljpkgs</code> is
+<code>clj-nix.legacyPackages.${system}</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="ss">clj-tuto</span> <span class="o">=</span> cljpkgs<span class="o">.</span>mkCljBin <span class="p">{</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/cljdemo&quot;</span><span class="p">;</span>
@@ -842,7 +843,7 @@ container. We can use a headless JDK to reduce the size, let's try that:</p>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  <span class="ss">projectSrc</span> <span class="o">=</span> <span class="l">./.</span><span class="p">;</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;me.lafuente/cljdemo&quot;</span><span class="p">;</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  <span class="ss">main-ns</span> <span class="o">=</span> <span class="s2">&quot;demo.core&quot;</span><span class="p">;</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  <span class="ss">jdkRunner</span> <span class="o">=</span> pkgs<span class="o">.</span>jdk17_headless<span class="p">;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  <span class="ss">jdkRunner</span> <span class="o">=</span> pkgs<span class="o">.</span>jdk_headless<span class="p">;</span>
 <a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">};</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>nix<span class="w"> </span>build<span class="w"> </span>.#clj-tuto
@@ -871,7 +872,7 @@ container:</p>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="ss">name</span> <span class="o">=</span> <span class="s2">&quot;clj-nix&quot;</span><span class="p">;</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="ss">tag</span> <span class="o">=</span> <span class="s2">&quot;latest&quot;</span><span class="p">;</span>
 <a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="ss">config</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>      <span class="ss">Cmd</span> <span class="o">=</span> clj-nix<span class="o">.</span>lib<span class="o">.</span>mkCljCli self<span class="o">.</span>packages<span class="o">.</span><span class="s2">&quot;</span><span class="si">${</span>system<span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span>jdk-tuto <span class="p">{</span> <span class="p">};</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>      <span class="ss">Cmd</span> <span class="o">=</span> clj-nix<span class="o">.</span>lib<span class="o">.</span>mkCljCli <span class="p">{</span> <span class="ss">jdkDrv</span> <span class="o">=</span> self<span class="o">.</span>packages<span class="o">.</span><span class="s2">&quot;</span><span class="si">${</span>system<span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span>jdk-tuto<span class="p">;</span> <span class="p">};</span>
 <a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="p">};</span>
 <a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>  <span class="p">};</span>
 </code></pre></div>
