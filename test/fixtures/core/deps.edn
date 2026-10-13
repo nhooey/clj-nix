@@ -1,0 +1,6 @@
+{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        clj-kondo/clj-kondo {:mvn/version "2022.04.26-20220502.201054-5"}
+        cider/piggieback    {:mvn/version "0.4.1-SNAPSHOT"}
+        io.github.babashka/fs {:git/sha "7adcefeb773bd786408cdc788582f145f79626a6"}
+        io.github.weavejester/medley {:git/tag "1.4.0"
+                                      :git/sha "0044c6a"}}}
