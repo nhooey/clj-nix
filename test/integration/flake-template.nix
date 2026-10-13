@@ -3,11 +3,9 @@
   description = "A clj-nix flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    clj-nix = {
-      url = "{{cljnixUrl}}";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    clj-nix.url = "{{cljnixUrl}}";
+    # clj-nix's locked nixpkgs, so every run builds the same derivations
+    nixpkgs.follows = "clj-nix/nixpkgs";
   };
   outputs =
     {
