@@ -1,0 +1,9 @@
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.4"}
+        org.clojure/clojurescript {:mvn/version "1.12.145"}
+        thheller/shadow-cljs {:mvn/version "3.5.7"}}
+ ;; shadow-cljs' usual deps.edn alias, for the `aliases` package. Its
+ ;; :extra-paths hold the :alias-app build's namespace, so that build fails
+ ;; if mkCljsApp ignores `aliases`.
+ :aliases {:shadow-cljs {:extra-paths ["alias-src"]
+                         :main-opts ["-m" "shadow.cljs.devtools.cli"]}}}

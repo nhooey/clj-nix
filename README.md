@@ -11,6 +11,6 @@ Nix is a great tool to build and deploy software, but Clojure is not well
 supported in the Nix ecosystem.
 
 `clj-nix` tries to improve the situation, providing Nix helpers to interact with
-Clojure projects
+Clojure projects, including ClojureScript applications built with shadow-cljs
 
 Full documentation: https://jlesquembre.github.io/clj-nix/
