@@ -1,0 +1,55 @@
+# vi: ft=nix
+# Local Variables:
+# mode: nix
+# End:
+{
+  description = "A clj-nix ClojureScript flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    clj-nix = {
+      url = "{{cljnixUrl}}";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+  outputs =
+    {
+      self,
+      nixpkgs,
+      clj-nix,
+    }:
+
+    let
+      supportedSystems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
+    in
+    {
+      packages = nixpkgs.lib.genAttrs supportedSystems (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ clj-nix.overlays.default ];
+          };
+        in
+        {
+          mkCljsApp-test = pkgs.mkCljsApp {
+            projectSrc = ./.;
+            name = "me.lafuente/cljs-example";
+            version = "0.1.0";
+          };
+
+          mkCljsApp-test-aliases = pkgs.mkCljsApp {
+            projectSrc = ./.;
+            name = "me.lafuente/cljs-example";
+            version = "0.1.0";
+            aliases = [ "shadow-cljs" ];
+          };
+        }
+      );
+    };
+}

@@ -12,6 +12,8 @@ The builder functions below come from `overlays.default` or from
 - [mkGraalBin](#mkgraalbin): Creates a binary with GraalVM from a derivation
   created with `mkCljBin`
 - [mkCljLib](#mkcljlib): Creates a clojure library jar
+- [mkCljsApp](#mkcljsapp): Creates a ClojureScript application with
+  [shadow-cljs](https://github.com/thheller/shadow-cljs)
 - [mkBabashka](#mkBabashka): Builds custom
   [babashka](https://github.com/babashka/babashka)
 
@@ -210,6 +212,80 @@ mkCljLib {
   projectSrc = ./.;
   name = "me.lafuente/my-lib";
   buildCommand = "clj -T:build jar";
+}
+```
+
+### mkCljsApp
+
+Creates a ClojureScript application, compiled with a
+[shadow-cljs](https://github.com/thheller/shadow-cljs) release build. Takes the
+following attributes (those without a default are mandatory, extra attributes
+are passed to **mkDerivation**):
+
+- **projectSrc**: Project source code. It needs a `deps.edn` with
+  `thheller/shadow-cljs` in its dependencies, and a `shadow-cljs.edn` with the
+  build.
+
+- **name**: Derivation and ClojureScript project name. It's recommended to use
+  a namespaced name. If not, a namespace is added automatically. E.g. `foo`
+  will be transformed to `foo/foo`
+
+- **version**: Derivation and ClojureScript project version. (Default: `DEV`)
+
+- **buildId**: Build id in `shadow-cljs.edn`. (Default: `app`)
+
+- **aliases**: List of `deps.edn` aliases (strings, without the `:`) used to
+  run shadow-cljs. If empty, the build runs
+  `clojure -M -m shadow.cljs.devtools.cli release <buildId>`, so shadow-cljs
+  must be in the top-level `:deps`. Otherwise it runs
+  `clojure -M:<alias1>:<alias2> release <buildId>`, and one of the aliases
+  must set `:main-opts ["-m" "shadow.cljs.devtools.cli"]`, as the shadow-cljs
+  documentation suggests. (Default: `[ ]`)
+
+- **buildCommand**: Command to build the application. If provided, it replaces
+  the shadow-cljs command above. The build has no network access, so it can't
+  run `npx shadow-cljs`; use the Clojure CLI instead, e.g.
+  `clojure -M:shadow-cljs release app`.
+
+- **lockfile**: The lock file. (Default: `${projectSrc}/deps-lock.json`)
+
+- **installPaths**: List of directories, relative to the project root, whose
+  contents are copied to the output. The build fails if one of them doesn't
+  exist. The default matches the usual browser layout, with
+  `:output-dir "public/js"` served from `public/`. (Default: `[ "public" ]`)
+
+The build runs on the JVM only. If your `buildCommand` needs Node.js, add it
+with `nativeBuildInputs = [ pkgs.nodejs ];`.
+
+!!! note "Maintainer"
+
+    `mkCljsApp` is maintained by [@nhooey](https://github.com/nhooey).
+
+**Example**:
+
+```nix
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/my-app";
+  version = "1.0.0";
+}
+```
+
+**Example**, with shadow-cljs in an alias and the output in
+`resources/public`:
+
+```nix
+# deps.edn:
+#   {:paths ["src"]
+#    :deps {org.clojure/clojurescript {:mvn/version "..."}}
+#    :aliases {:shadow-cljs
+#              {:extra-deps {thheller/shadow-cljs {:mvn/version "..."}}
+#               :main-opts ["-m" "shadow.cljs.devtools.cli"]}}}
+mkCljsApp {
+  projectSrc = ./.;
+  name = "me.lafuente/my-app";
+  aliases = [ "shadow-cljs" ];
+  installPaths = [ "resources/public" ];
 }
 ```
 

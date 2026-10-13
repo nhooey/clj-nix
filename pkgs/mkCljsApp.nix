@@ -1,0 +1,138 @@
+{ stdenv
+, lib
+, clojure
+
+  # Custom utils
+, clj-builder
+, fake-git
+, mk-deps-cache
+}:
+
+{
+  # User options
+  projectSrc
+, name
+, version ? "DEV"
+, buildId ? "app"
+, aliases ? [ ]
+, buildCommand ? null
+, lockfile ? null
+, installPaths ? [ "public" ]
+
+  # Needed for version ranges
+, maven-extra ? [ ]
+, ...
+}@attrs:
+
+let
+
+  extra-attrs = builtins.removeAttrs attrs [
+    "projectSrc"
+    "name"
+    "version"
+    "buildId"
+    "aliases"
+    "buildCommand"
+    "lockfile"
+    "installPaths"
+    "maven-extra"
+    "nativeBuildInputs"
+  ];
+
+  deps-cache = mk-deps-cache {
+    lockfile = if isNull lockfile then (projectSrc + "/deps-lock.json") else lockfile;
+    inherit maven-extra;
+  };
+
+  fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
+  artifactId = builtins.elemAt (lib.strings.splitString "/" fullId) 1;
+
+  # With aliases, the alias provides shadow-cljs' :main-opts
+  # (["-m" "shadow.cljs.devtools.cli"]), so we don't add `-m` ourselves
+  shadowCmd =
+    if aliases == [ ]
+    then "clojure -M -m shadow.cljs.devtools.cli"
+    else "clojure -M:${lib.escapeShellArg (lib.concatStringsSep ":" aliases)}";
+
+in
+stdenv.mkDerivation ({
+  inherit version;
+
+  pname = lib.strings.sanitizeDerivationName artifactId;
+  src = projectSrc;
+
+  # Build time deps. A release build of a browser target runs on the JVM
+  # only; add Node.js through nativeBuildInputs if buildCommand needs it.
+  nativeBuildInputs =
+    attrs.nativeBuildInputs or [ ]
+      ++
+      [ fake-git clojure ];
+
+  passthru = {
+    inherit deps-cache fullId artifactId;
+  };
+
+  preBuildPhases = [ "preBuildPhase" ];
+  preBuildPhase =
+    (lib.strings.optionalString (! isNull lockfile)
+      ''
+        cp "${lockfile}" deps-lock.json
+      ''
+    ) +
+    ''
+      ${clj-builder}/bin/clj-builder patch-git-sha "$(pwd)"
+    '';
+
+  # Same Clojure environment as mkCljBin, see the links there
+  buildPhase =
+    ''
+      runHook preBuild
+
+      export HOME="$TMP/clj-home"
+      mkdir -p "$HOME"
+      cp -rL "${deps-cache}/." "$HOME/"
+      chmod -R u+w "$HOME"
+
+      export JAVA_TOOL_OPTIONS="-Duser.home=$HOME"
+
+      export CLJ_CONFIG="$HOME/.clojure"
+      export CLJ_CACHE="$TMP/cp_cache"
+      export GITLIBS="$HOME/.gitlibs"
+    ''
+    +
+    (
+      if builtins.isNull buildCommand then
+        ''
+          ${shadowCmd} release ${lib.escapeShellArg buildId}
+        ''
+      else
+        ''
+          ${buildCommand}
+        ''
+    )
+    +
+    ''
+      runHook postBuild
+    '';
+
+  installPhase =
+    ''
+      runHook preInstall
+
+      mkdir -p $out
+    ''
+    +
+    lib.concatMapStrings
+      (path: ''
+        if [ ! -d ${lib.escapeShellArg path} ]; then
+          echo "mkCljsApp: installPaths entry is not a directory:" ${lib.escapeShellArg path} >&2
+          exit 1
+        fi
+        cp -r ${lib.escapeShellArg path}/. $out/
+      '')
+      installPaths
+    +
+    ''
+      runHook postInstall
+    '';
+} // extra-attrs)
