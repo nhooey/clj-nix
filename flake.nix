@@ -39,19 +39,25 @@
     {
       packages = eachSystem ({ pkgs, system }:
         {
-          inherit (pkgs) clj-builder deps-lock mk-deps-cache
-            fake-git
-            mkCljBin mkCljLib mkGraalBin customJdk
-            cljHooks
-            mkBabashka bbTasksFromFile;
+          inherit (pkgs) clj-builder deps-lock fake-git;
 
           babashka = pkgs.mkBabashka { };
           babashka-unwrapped = pkgs.mkBabashka { wrap = false; };
 
           docs = pkgs.callPackage ./extra-pkgs/docs { inherit pkgs; };
+        });
+
+      # `packages` may only hold derivations (`nix flake check` rejects
+      # anything else), so the builder functions live here, next to the
+      # packages above.
+      legacyPackages = eachSystem ({ pkgs, system }:
+        self.packages.${system} // {
+          inherit (pkgs) mk-deps-cache
+            mkCljBin mkCljLib mkGraalBin customJdk
+            cljHooks
+            mkBabashka bbTasksFromFile;
 
           babashkaEnv = import ./extra-pkgs/bbenv/lib/bbenv.nix;
-
         });
 
       devShells = eachSystem ({ pkgs, ... }: {
