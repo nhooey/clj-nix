@@ -18,7 +18,7 @@ setup_file() {
   cp -r "$cljnix_dir" "$cljnix_dir_copy"
 
   nix flake new --template . "$project_dir"
-  init_project_flake "$cljnix_dir_copy" "$cljnix_dir/test/integration/flake.template"
+  init_project_flake "$cljnix_dir_copy" "$cljnix_dir/test/integration/flake-template.nix"
   git init
   git add .
 }
