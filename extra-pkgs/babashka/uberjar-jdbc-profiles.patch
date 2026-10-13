@@ -1,0 +1,34 @@
+diff --git a/script/uberjar b/script/uberjar
+index f31d15d10..09ebbcf52 100755
+--- a/script/uberjar
++++ b/script/uberjar
+@@ -38,29 +38,21 @@ fi
+ if [ "$BABASHKA_FEATURE_SQLITE" = "true" ]
+ then
+     BABASHKA_LEIN_PROFILES+=",+feature/sqlite"
+-else
+-    BABASHKA_LEIN_PROFILES+=",-feature/sqlite"
+ fi
+ 
+ if [ "$BABASHKA_FEATURE_POSTGRESQL" = "true" ]
+ then
+     BABASHKA_LEIN_PROFILES+=",+feature/postgresql"
+-else
+-    BABASHKA_LEIN_PROFILES+=",-feature/postgresql"
+ fi
+ 
+ if [ "$BABASHKA_FEATURE_HSQLDB" = "true" ]
+ then
+     BABASHKA_LEIN_PROFILES+=",+feature/hsqldb"
+-else
+-    BABASHKA_LEIN_PROFILES+=",-feature/hsqldb"
+ fi
+ 
+ if [ "$BABASHKA_FEATURE_ORACLEDB" = "true" ]
+ then
+     BABASHKA_LEIN_PROFILES+=",+feature/oracledb"
+-else
+-    BABASHKA_LEIN_PROFILES+=",-feature/oracledb"
+ fi
+ 
+ if [ "$BABASHKA_FEATURE_XML" != "false" ]
