@@ -76,6 +76,13 @@ let
   javaMain = builtins.replaceStrings [ "-" ] [ "_" ] main-ns;
 
 in
+
+assert lib.assertMsg (builtins.isString main-ns) ''
+  mkCljBin: main-ns must be a string naming the namespace with the -main
+  function and (:gen-class) in its ns form, e.g. main-ns = "demo.core";
+  got ${builtins.typeOf main-ns}.
+'';
+
 stdenv.mkDerivation ({
   inherit version;
 
@@ -167,7 +174,6 @@ stdenv.mkDerivation ({
       # :extra-paths in an alias
       else
         ''
-          # clj-builder check-main "${fullId}" "${version}" "${main-ns}"
           ${buildCommand}
         ''
     )
