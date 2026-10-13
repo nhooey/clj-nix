@@ -7,9 +7,7 @@
     [babashka.fs :as fs]
     [clojure.tools.deps :as deps]))
 
-(def my-deps '{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
-                      babashka/fs {:mvn/version "0.1.5"}
-                      javax.activation/javax.activation-api {:mvn/version "1.2.0"}}})
+(def my-deps (h/fixture-deps "utils"))
 
 (use-fixtures :once (h/deps-cache-fixture my-deps))
 
