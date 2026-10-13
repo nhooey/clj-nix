@@ -48,6 +48,16 @@ teardown_file() {
     [ "$output" = "Hello from CLOJURE!!!" ]
 }
 
+@test "nix build .#mkCljLib-test" {
+    nix_build_with_result .#mkCljLib-test
+    run -0 jar tf result/cljdemo-1.0.0.jar
+    [[ "$output" == *"META-INF/maven/me.lafuente/cljdemo/pom.xml"* ]]
+    [[ "$output" == *"META-INF/maven/me.lafuente/cljdemo/pom.properties"* ]]
+    [[ "$output" == *"hello/core.clj"* ]]
+    # A library jar ships sources, not AOT-compiled classes
+    [[ "$output" != *".class"* ]]
+}
+
 @test "nix build .#customJdk-test" {
     nix_build_with_result .#customJdk-test
     run -0 ./result/bin/cljdemo
