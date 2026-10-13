@@ -1,4 +1,4 @@
-{ stdenv, python311Packages, pkgs, ... }:
+{ stdenv, python3Packages, pkgs, ... }:
 
 let
   inherit (pkgs) lib;
@@ -29,12 +29,12 @@ in
 
 
 stdenv.mkDerivation {
-  pname = "omics-platform-docs";
+  pname = "clj-nix-docs";
   version = "1.0.0";
 
   src = ../../.;
 
-  buildInputs = with  python311Packages; [ mkdocs-material mkdocs ];
+  buildInputs = with python3Packages; [ mkdocs-material mkdocs ];
 
   buildPhase = ''
     mv extra-pkgs/docs/mkdocs.yaml .
