@@ -85,6 +85,13 @@ let
       lockfile = ./deps-lock.json;
       enableLeiningen = true;
 
+      # script/uberjar's -feature/<driver> also drops :feature/jdbc, so the
+      # JDBC features fail unless BABASHKA_FEATURE_ORACLEDB=true
+      # (babashka/babashka#2194). This is the script/uberjar part of the fix,
+      # babashka/babashka@25cf3c96. Remove when babashka is bumped past
+      # 1.13.226.
+      patches = [ ./uberjar-jdbc-profiles.patch ];
+
       name = "babashka/babashka";
       main-ns = "babashka.main";
       jdkRunner = graalvm;
