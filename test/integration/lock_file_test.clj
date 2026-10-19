@@ -151,7 +151,7 @@
                        :mvn-repo default-mvn-url}])
            (:mvn-deps (c/lock-file project-dir)))))))
 
-(deftest mvn-local-repo-test
+(deftest ^:network mvn-local-repo-test
   ;; https://github.com/jlesquembre/clj-nix/issues/168
   ;; Lock paths are relative to the local repo, wherever it is
   (let [deps {:deps {'org.clojure/data.json {:mvn/version "2.5.2"}}}
