@@ -5,6 +5,9 @@
   nodejs,
   importNpmLock,
 
+  # Default JDK
+  jdk,
+
   # Custom utils
   clj-builder,
   fake-git,
@@ -13,6 +16,7 @@
 
 {
   # User options
+  jdkRunner ? jdk, # JDK that runs the build (Clojure CLI and shadow-cljs)
   projectSrc,
   name,
   version ? "DEV",
@@ -32,6 +36,7 @@
 let
 
   extra-attrs = builtins.removeAttrs attrs [
+    "jdkRunner"
     "projectSrc"
     "name"
     "version"
@@ -66,6 +71,8 @@ let
       null;
   hasNodeModules = resolvedNodeModules != null;
 
+  builder = clj-builder.override { jdk = jdkRunner; };
+
   fullId = if (lib.strings.hasInfix "/" name) then name else "${name}/${name}";
   artifactId = builtins.elemAt (lib.strings.splitString "/" fullId) 1;
 
@@ -91,7 +98,7 @@ stdenv.mkDerivation (
       attrs.nativeBuildInputs or [ ]
       ++ [
         fake-git
-        clojure
+        (clojure.override { jdk = jdkRunner; })
       ]
       # Links $npmDeps/node_modules/* into ./node_modules before configure,
       # and puts node_modules/.bin on PATH
@@ -109,7 +116,7 @@ stdenv.mkDerivation (
         cp "${lockfile}" deps-lock.json
       '')
       + ''
-        ${clj-builder}/bin/clj-builder patch-git-sha "$(pwd)"
+        ${builder}/bin/clj-builder patch-git-sha "$(pwd)"
       '';
 
     # Same Clojure environment as mkCljBin, see the links there
