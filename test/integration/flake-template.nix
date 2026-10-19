@@ -9,7 +9,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, nixpkgs, clj-nix }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      clj-nix,
+    }:
 
     let
       supportedSystems = [
@@ -19,7 +24,8 @@
       ];
 
       # The derivations the tests build, for the given package set
-      testDrvs = pkgs:
+      testDrvs =
+        pkgs:
         let
           cljpkgs = clj-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
         in
@@ -50,7 +56,8 @@
         };
     in
     {
-      packages = nixpkgs.lib.genAttrs supportedSystems (system:
+      packages = nixpkgs.lib.genAttrs supportedSystems (
+        system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
           cljpkgs = clj-nix.legacyPackages.${system};
@@ -61,15 +68,15 @@
           linuxPkgs = pkgs.pkgsLinux;
           linuxDrvs = testDrvs linuxPkgs;
         in
-        testDrvs pkgs // {
-          jvm-container-test =
-            linuxPkgs.dockerTools.buildLayeredImage {
-              name = "jvm-container-test";
-              tag = "latest";
-              config = {
-                Cmd = clj-nix.lib.mkCljCli { jdkDrv = linuxDrvs.customJdk-test; };
-              };
+        testDrvs pkgs
+        // {
+          jvm-container-test = linuxPkgs.dockerTools.buildLayeredImage {
+            name = "jvm-container-test";
+            tag = "latest";
+            config = {
+              Cmd = clj-nix.lib.mkCljCli { jdkDrv = linuxDrvs.customJdk-test; };
             };
+          };
 
           graal-container-test =
             let
@@ -86,10 +93,14 @@
           babashka-test = cljpkgs.mkBabashka { };
 
           babashka-with-features-test = cljpkgs.mkBabashka {
-            withFeatures = [ "jdbc" "sqlite" ];
+            withFeatures = [
+              "jdbc"
+              "sqlite"
+            ];
           };
 
-        });
+        }
+      );
     };
 
 }

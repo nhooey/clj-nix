@@ -46,7 +46,6 @@ let
       ../cljnix
       (lib.fileset.fileFilter (f: f.hasExt "clj") ../integration)
       ../fixtures
-      ../resources
       # `pkgs` is on the :test classpath for fake-git's namespace.
       ../../pkgs/fake_git.clj
     ];
