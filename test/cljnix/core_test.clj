@@ -1,6 +1,6 @@
 (ns cljnix.core-test
   (:require
-   [clojure.test :refer [deftest is use-fixtures testing]]
+   [clojure.test :refer [deftest is testing]]
    [babashka.fs :as fs]
    [cljnix.test-helpers :as h]
    [cljnix.core :as c]
@@ -27,8 +27,6 @@
    (h/basis deps-map)
    mvn/standard-repos))
 
-(use-fixtures :once (h/deps-cache-fixture all-deps))
-
 (defn- missing-git-deps
   [deps deps-in-cache]
   {:pre [(s/valid? ::deps.spec/deps-map deps)
@@ -39,7 +37,12 @@
                          cache-dir)
       (c/missing-git-deps git-deps cache-dir))))
 
-(deftest missing-git-deps-test
+(deftest ^:network missing-git-deps-test
+  ;; Clones the git deps (babashka/fs, medley) into GITLIBS. Prepped here
+  ;; rather than in a :once fixture, so the offline tests in this namespace
+  ;; don't need the network.
+  (h/prep-deps all-deps)
+
   (testing "git cache is empty"
     (is (= []
            (fs/with-temp-dir [cache-dir {:prefix "gitdeps_cache"}]
