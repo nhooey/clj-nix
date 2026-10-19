@@ -31,6 +31,17 @@ setup_file() {
 }
 
 # bats test_tags=cljs
+@test "mkCljsApp with jdkRunner" {
+    nix_build_with_result .#mkCljsApp-test-jdk
+    [ -s result/js/main.js ]
+    expected=$(nix eval --raw .#mkCljsApp-test-jdk.jdkRunnerVersion)
+    default=$(nix eval --raw .#mkCljsApp-test-jdk.defaultJdkVersion)
+    # Otherwise the test can't tell jdkRunner from the default
+    [ "$expected" != "$default" ]
+    [ "$(cat result/java-version.txt)" = "$expected" ]
+}
+
+# bats test_tags=cljs
 @test "mkCljsApp with npmRoot" {
     nix_build_with_result .#mkCljsApp-test-npm
     [ -s result/js/main.js ]
