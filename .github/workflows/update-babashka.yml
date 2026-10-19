@@ -5,7 +5,7 @@ on:
     - cron: "39 3 * * 1"
 
 jobs:
-  clojure-deps:
+  update-babashka:
     permissions:
       contents: write
       pull-requests: write
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Update babashka version
         run: "nix run .#babashka.updateScript"
