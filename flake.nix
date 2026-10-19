@@ -131,6 +131,14 @@
                 '';
               }
               {
+                name = "tests-network";
+                category = "tests";
+                help = "Run Clojure tests that need network access";
+                command = ''
+                  kaocha :network-integration "$@"
+                '';
+              }
+              {
                 name = "tests-e2e";
                 category = "tests";
                 help = "Run end-to-end tests with bats";
@@ -141,9 +149,9 @@
               {
                 name = "tests-all";
                 category = "tests";
-                help = "Run unit, integration and end-to-end tests";
+                help = "Run unit, integration, network and end-to-end tests";
                 command = ''
-                  tests-unit && tests-integration && tests-e2e
+                  tests-unit && tests-integration && tests-network && tests-e2e
                 '';
               }
               {

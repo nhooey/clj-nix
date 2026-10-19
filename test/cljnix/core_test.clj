@@ -185,7 +185,7 @@
                        :snapshot "clj-kondo-2022.04.26-SNAPSHOT.pom"}])
            mvn-deps)))))
 
-(deftest expand-sha-tests
+(deftest ^:network expand-sha-tests
   (fs/with-temp-dir [project-dir {:prefix "dummy_project"}]
     (let [spit-helper (h/make-spit-helper project-dir)]
       (spit-helper "deps.edn" {:deps {'io.github.babashka/fs
