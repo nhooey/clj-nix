@@ -113,6 +113,7 @@
                   (cd ./test/leiningen-example-project && nix run ../..#deps-lock -- --lein --lein-profiles foobar && mv deps-lock.json deps-lock-foobar-profile.json)
                   (cd ./test/leiningen-example-project && nix run ../..#deps-lock -- --lein)
                   (cd ./test && nix run ..#deps-lock -- --deps-include ../deps.edn $(printf -- '--deps-include %s ' fixtures/*/deps.edn))
+                  (cd ./test/git-deps-example-project && nix run ../..#deps-lock)
                 '';
               }
               {

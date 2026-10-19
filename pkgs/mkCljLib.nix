@@ -10,6 +10,7 @@
   # Custom utils
   clj-builder,
   mk-deps-cache,
+  fake-git,
 }:
 
 {
@@ -56,6 +57,7 @@ stdenv.mkDerivation (
 
     # Build time deps
     nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ [
+      fake-git
       jdkRunner
       (clojure.override { jdk = jdkRunner; })
     ];
@@ -100,7 +102,9 @@ stdenv.mkDerivation (
 
       mkdir -p $out
 
-      jarPath="$(find target -type f -name "*.jar" -print | head -n 1)"
+      # Sort, because `find` lists files in directory order, which differs
+      # between filesystems.
+      jarPath="$(find target -type f -name "*.jar" -print | sort | head -n 1)"
       cp $jarPath $out
 
       runHook postInstall
