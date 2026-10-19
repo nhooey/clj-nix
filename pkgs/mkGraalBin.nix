@@ -1,7 +1,7 @@
 {
   lib,
   stdenv,
-  fetchurl,
+  srcFromJson,
   glibcLocales,
   writeShellScript,
   graalvmPackages,
@@ -64,14 +64,8 @@ let
     !inOtherAttrs || !(is-empty v)
   ) extra-attrs;
 
-  graal-build-time =
-    let
-      version = "1.0.6";
-    in
-    fetchurl {
-      url = "https://repo.clojars.org/com/github/clj-easy/graal-build-time/${version}/graal-build-time-${version}.jar";
-      hash = "sha256-IQTd330QP1zB40sI2CsbYhcWjudengHSYd22B4ZueLw=";
-    };
+  # Version and hash are refreshed by `update-deps`
+  graal-build-time = (srcFromJson ./graal-build-time.json).src;
 
 in
 
