@@ -28,10 +28,23 @@ jobs:
   ci-test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # Hestia reads the cache list through the Actions API
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v7
 
       - uses: DeterminateSystems/determinate-nix-action@v3
+
+      # Caches the store paths the job builds that cache.nixos.org doesn't have
+      - uses: Mic92/hestia@v3.1.0
+        with:
+          # Keep equal to the uses: tag; Dependabot bumps only that one
+          version: v3.1.0
+          upstream-cache-filter: true
+          # Builds against current nixos-unstable must not fill the cache
+          read-only: ${{ github.event_name == 'schedule' || inputs.nixpkgs == 'unstable' }}
 
       # The e2e test flakes follow clj-nix's nixpkgs, so this moves them too
       - name: Use current nixos-unstable (weekly or on request)
