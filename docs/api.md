@@ -23,7 +23,8 @@
 Creates a Clojure application. Takes the following attributes (those without a
 default are mandatory, extra attributes are passed to **mkDerivation**):
 
-- **jdkRunner**: JDK used at runtime by the application. (Default: `jdk`)
+- **jdkRunner**: JDK that builds and runs the application (Clojure, clj-builder
+  and Leiningen). (Default: `jdk`)
 
 - **projectSrc**: Project source code.
 
@@ -44,7 +45,8 @@ default are mandatory, extra attributes are passed to **mkDerivation**):
   If you provide your own build command, you can define the path to the final
   uberjar with the `jarPath` environment variable (e.g.:
   `export jarPath=$BUILD_DIR/my_uber.jar`). If `jarPath` is undefined, `clj-nix`
-  will try to find a jar file in a directory called `target`.
+  looks for a jar file in a directory called `target`, preferring one whose
+  name ends in `-standalone.jar`.
 
 - **lockfile**: The lock file. (Default: `${projectSrc}/deps-lock.json`)
 
