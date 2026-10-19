@@ -10,9 +10,9 @@ setup_file() {
 
   setup_temp_project_vars "clj-nix_cljs_project"
 
-  cljs_project_path="$cljnix_dir/test/clojurescript-example-project"
+  cljs_project_path="$cljnix_dir/test/fixtures/example-projects/clojurescript"
   cp -r "$cljs_project_path/." "$project_dir"
-  init_project_flake "$cljnix_dir" "$project_dir/flake.template"
+  init_project_flake "$cljnix_dir" "$project_dir/flake-template.nix"
   nix run "$cljnix_dir#deps-lock"
 }
 
