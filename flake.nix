@@ -78,6 +78,7 @@
               pkgs.envsubst
               pkgs.mustache-go
               pkgs.diffutils
+              pkgs.clj-kondo
               pkgs.nixfmt
               pkgs.cljfmt
             ];
@@ -132,6 +133,18 @@
                   else
                     exec ${pkgs.bats}/bin/bats "$@"
                   fi
+                '';
+              }
+              {
+                name = "lint";
+                category = "test runners";
+                help = "Lint Clojure code with clj-kondo (fails on errors)";
+                command = ''
+                  # Analyse the classpath first: imports the configs that
+                  # dependencies export (macros like babashka.fs/with-temp-dir)
+                  # and caches their vars (arities, deprecations)
+                  clj-kondo --lint "$(clojure -Spath -M:test)" --dependencies --parallel --copy-configs
+                  clj-kondo --lint src test pkgs scripts --fail-level error "$@"
                 '';
               }
               {

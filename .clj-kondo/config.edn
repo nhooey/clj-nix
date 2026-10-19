@@ -1,0 +1,2 @@
+{;; A Leiningen fixture project for the end-to-end tests, not clj-nix code
+ :output {:exclude-files ["^test/leiningen-example-project/"]}}
