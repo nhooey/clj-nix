@@ -101,9 +101,10 @@
               {
                 name = "update-deps";
                 category = "dependencies";
-                help = "Update builder-lock.json and clojure-deps.edn";
+                help = "Update dependency versions and regenerate the lock files";
                 command = ''
                   bb ./scripts/newer_clojure_versions.bb
+                  bb ./scripts/update_maven_jar.bb pkgs/graal-build-time.json
                   clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}}' -M -m antq.core --upgrade --force --skip=github-action
                   clj -X cljnix.bootstrap/as-json :deps-path '"deps.edn"' | jq . > pkgs/builder-lock.json
                   clj -X cljnix.core/clojure-deps-str > src/clojure-deps.edn
