@@ -145,10 +145,10 @@
               {
                 name = "bats";
                 category = "test runners";
-                help = "Run tests with bats (default: bats --timing test)";
+                help = "Run tests with bats (default: bats --timing test/e2e)";
                 command = ''
                   if [ $# -eq 0 ]; then
-                    exec ${pkgs.bats}/bin/bats --timing test
+                    exec ${pkgs.bats}/bin/bats --timing test/e2e
                   else
                     exec ${pkgs.bats}/bin/bats "$@"
                   fi
@@ -195,7 +195,7 @@
                 category = "tests";
                 help = "Run end-to-end tests with bats";
                 command = ''
-                  exec ${pkgs.bats}/bin/bats --timing test "$@"
+                  exec ${pkgs.bats}/bin/bats --timing test/e2e "$@"
                 '';
               }
               {
