@@ -71,11 +71,15 @@ teardown_file() {
     [ "$output" = "Hello from CLOJURE!!!" ]
 }
 
+# The container tests need docker or podman. On macOS they also need a Linux
+# builder (e.g. nix-darwin's nix.linux-builder), since the images are Linux
+# images. Without one, skip them: tests-e2e --filter-tags '!docker'
+
 # bats test_tags=docker
 @test "nix build .#jvm-container-test" {
     nix_build_with_result .#jvm-container-test
     $(container_runtime) load -i result
-    run -0 "$(container_runtime)" run --rm jvm-container-test:latest
+    run -0 "$(container_runtime)" run --rm --network=none jvm-container-test:latest
     [ "$output" = "Hello from CLOJURE!!!" ]
 }
 
@@ -83,7 +87,7 @@ teardown_file() {
 @test "nix build .#graal-container-test" {
     nix_build_with_result .#graal-container-test
     $(container_runtime) load -i result
-    run -0 "$(container_runtime)" run --rm graal-container-test:latest
+    run -0 "$(container_runtime)" run --rm --network=none graal-container-test:latest
     [ "$output" = "Hello from CLOJURE!!!" ]
 }
 
