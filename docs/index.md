@@ -35,6 +35,7 @@ a lock file is a prerequisite to using the Nix helpers provided by `clj-nix`.
 ## Goals
 
 - Create a binary from a Clojure application
+- Build a ClojureScript application with shadow-cljs
 - Create an optimized JDK runtime to execute the Clojure binary
 - Create GraalVM native images from a Clojure application
 - Simplify container creation for Clojure applications
