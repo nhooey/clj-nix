@@ -55,7 +55,7 @@ Let's try it:
 
 ```bash
 nix build .#clj-tuto
-./result/bin/clj-tuto
+./result/bin/cljdemo
 # Or
 nix run .#clj-tuto
 ```
@@ -120,7 +120,7 @@ clj-container =
     name = "clj-nix";
     tag = "latest";
     config = {
-      Cmd = clj-nix.lib.mkCljCli self.packages."${system}".jdk-tuto { };
+      Cmd = clj-nix.lib.mkCljCli { jdkDrv = self.packages."${system}".jdk-tuto; };
     };
   };
 ```
@@ -175,7 +175,7 @@ graal-tuto = cljpkgs.mkGraalBin {
 
 ```bash
 nix build .#graal-tuto
-./result/bin/clj-tuto
+./result/bin/cljdemo
 nix path-info -sSh .#graal-tuto
 ```
 
