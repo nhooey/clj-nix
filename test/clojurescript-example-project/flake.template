@@ -49,6 +49,26 @@
             aliases = [ "shadow-cljs" ];
             buildId = "alias-app";
           };
+
+          # The `npm` build requires left-pad, from package-lock.json
+          mkCljsApp-test-npm = pkgs.mkCljsApp {
+            projectSrc = ./.;
+            name = "me.lafuente/cljs-example";
+            version = "0.1.0";
+            buildId = "npm";
+            npmRoot = ./.;
+          };
+
+          mkCljsApp-test-node-modules = pkgs.mkCljsApp {
+            projectSrc = ./.;
+            name = "me.lafuente/cljs-example";
+            version = "0.1.0";
+            buildId = "npm";
+            nodeModules = pkgs.importNpmLock.buildNodeModules {
+              npmRoot = ./.;
+              inherit (pkgs) nodejs;
+            };
+          };
         }
       );
     };
